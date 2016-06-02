@@ -1,6 +1,16 @@
 package org.anc.lapps.ranklib;
 
-import org.codehaus.groovy.tools.shell.Evaluator;
+import ciir.umass.edu.eval.Evaluator;
+import ciir.umass.edu.features.Normalizer;
+import ciir.umass.edu.features.SumNormalizor;
+import ciir.umass.edu.learning.RANKER_TYPE;
+import ciir.umass.edu.learning.RankerFactory;
+import ciir.umass.edu.metric.ERRScorer;
+import ciir.umass.edu.metric.MetricScorer;
+import ciir.umass.edu.metric.MetricScorerFactory;
+import ciir.umass.edu.utilities.MyThreadPool;
+import ciir.umass.edu.utilities.RankLibError;
+import ciir.umass.edu.utilities.SimpleMath;
 import org.lappsgrid.api.ProcessingService;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.metadata.IOSpecification;
@@ -11,7 +21,6 @@ import org.lappsgrid.serialization.lif.Container;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -381,62 +390,7 @@ public class RankLib implements ProcessingService {
                     e.evaluate(trainFile, validationFile, testFile, featureDescriptionFile);//All files except for trainFile can be empty. This will be handled appropriately
             }
         }
-        else //scenario: test a saved model
-        {
-            out.append("\n" + "Model file:\t" + savedModelFile);
-            out.append("\n" + "Feature normalization: " + ((Evaluator.normalize)?Evaluator.nml.name():"No"));
-            if(rankFile.compareTo("") != 0)
-            {
-                if(scoreFile.compareTo("") != 0)
-                {
-                    if(savedModelFiles.size() > 1)//models trained via cross-validation
-                        e.score(savedModelFiles, rankFile, scoreFile);
-                    else //a single model
-                        e.score(savedModelFile, rankFile, scoreFile);
-                }
-                else if(indriRankingFile.compareTo("") != 0)
-                {
-                    if(savedModelFiles.size() > 1)//models trained via cross-validation
-                        e.rank(savedModelFiles, rankFile, indriRankingFile);
-                    else if(savedModelFiles.size() == 1)
-                        e.rank(savedModelFile, rankFile, indriRankingFile);
-                        //This is *ONLY* for my personal use. It is *NOT* exposed via cmd-line
-                        //It will evaluate the input ranking (without being re-ranked by any model) using any measure specified via metric2T
-                    else
-                        e.rank(rankFile, indriRankingFile);
-                }
-                else
-                {
-                    throw RankLibError.create("This function has been removed.\n" +
-                            "Consider using -score in addition to your current parameters, " +
-                            "and do the ranking yourself based on these scores.");
-                }
-            }
-            else
-            {
-                out.append("\n" + "Test metric:\t" + testMetric);
-                if(testMetric.startsWith("ERR"))
-                    out.append("\n" + "Highest relevance label (to compute ERR): " + (int)SimpleMath.logBase2(ERRScorer.MAX));
 
-                if(savedModelFile.compareTo("") != 0)
-                {
-                    if(savedModelFiles.size() > 1)//models trained via cross-validation
-                    {
-                        if(testFiles.size() > 1)
-                            e.test(savedModelFiles, testFiles, prpFile);
-                        else
-                            e.test(savedModelFiles, testFile, prpFile);
-                    }
-                    else if(savedModelFiles.size() == 1) // a single model
-                        e.test(savedModelFile, testFile, prpFile);
-                }
-                else if(scoreFile.compareTo("") != 0)
-                    e.testWithScoreFile(testFile, scoreFile);
-                    //It will evaluate the input ranking (without being re-ranked by any model) using any measure specified via metric2T
-                else
-                    e.test(testFile, prpFile);
-            }
-        }
         MyThreadPool.getInstance().shutdown();
 
 
