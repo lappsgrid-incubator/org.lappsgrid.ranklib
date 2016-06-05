@@ -1,15 +1,22 @@
 package org.anc.lapps.ranklib;
 
 import ciir.umass.edu.eval.Evaluator;
+import ciir.umass.edu.features.LinearNormalizer;
 import ciir.umass.edu.features.Normalizer;
 import ciir.umass.edu.features.SumNormalizor;
-import ciir.umass.edu.learning.RANKER_TYPE;
-import ciir.umass.edu.learning.RankerFactory;
+import ciir.umass.edu.features.ZScoreNormalizor;
+import ciir.umass.edu.learning.*;
+import ciir.umass.edu.learning.boosting.AdaRank;
+import ciir.umass.edu.learning.boosting.RankBoost;
+import ciir.umass.edu.learning.neuralnet.ListNet;
+import ciir.umass.edu.learning.neuralnet.Neuron;
+import ciir.umass.edu.learning.neuralnet.RankNet;
+import ciir.umass.edu.learning.tree.LambdaMART;
+import ciir.umass.edu.learning.tree.RFRanker;
 import ciir.umass.edu.metric.ERRScorer;
 import ciir.umass.edu.metric.MetricScorer;
 import ciir.umass.edu.metric.MetricScorerFactory;
 import ciir.umass.edu.utilities.MyThreadPool;
-import ciir.umass.edu.utilities.RankLibError;
 import ciir.umass.edu.utilities.SimpleMath;
 import org.lappsgrid.api.ProcessingService;
 import org.lappsgrid.discriminator.Discriminators;
@@ -23,6 +30,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static ciir.umass.edu.eval.Evaluator.modelFile;
+import static ciir.umass.edu.eval.Evaluator.qrelFile;
+import static ciir.umass.edu.eval.Evaluator.useSparseRepresentation;
 
 /**
  * @author Alexandru Mahmoud
@@ -97,6 +108,8 @@ public class RankLib implements ProcessingService {
         String kcvModelFile = "";
         String rankFile = "";
         String prpFile = "";
+        String indriRankingFile = "";
+        String scoreFile = "";
 
         int nThread = -1; // nThread = #cpu-cores
 
@@ -108,6 +121,8 @@ public class RankLib implements ProcessingService {
         {
             return input;
         }
+
+        // TODO: add check of input format
         /*
         if (!Discriminators.Uri.GET.equals(discriminator))
         {
@@ -116,187 +131,225 @@ public class RankLib implements ProcessingService {
         */
 
         if(data.getParameter("train") != null) {
-
+            trainFile = (String) data.getParameter("train");
         }
 
         if(data.getParameter("ranker") != null) {
-
+            rankerType = (int) data.getParameter("ranker");
         }
 
         if(data.getParameter("feature") != null) {
+            featureDescriptionFile = (String) data.getParameter("feature");
+        }
 
+        if(data.getParameter("metric2t") != null) {
+            trainMetric = (String) data.getParameter("metric2T");
         }
 
         if(data.getParameter("metric2T") != null) {
-
+            testMetric = (String) data.getParameter("metric2T");
         }
 
         if(data.getParameter("gmax") != null) {
-
+            ERRScorer.MAX = Math.pow(2, (double) data.getParameter("gmax"));
         }
 
-        if(data.getParameter("grel") != null) {
-
+        if(data.getParameter("qrel") != null) {
+            qrelFile = (String) data.getParameter("qrel");
         }
 
         if(data.getParameter("tts") != null) {
-
+            ttSplit = (Float) data.getParameter("tts");
         }
 
         if(data.getParameter("tvs") != null) {
-
+            tvSplit = (Float) data.getParameter("tvs");
         }
 
         if(data.getParameter("kcv") != null) {
-
+            foldCV = (int) data.getParameter("kcv");
         }
 
         if(data.getParameter("validate") != null) {
-
+            validationFile = (String) data.getParameter("validate");
         }
 
         if(data.getParameter("test") != null) {
-
+            testFile = (String) data.getParameter("test");
+            testFiles.add(testFile);
         }
 
         if(data.getParameter("norm") != null) {
-
+            Evaluator.normalize = true;
+            String n = (String) data.getParameter("norm");
+            if(n.compareTo("sum") == 0)
+                Evaluator.nml = new SumNormalizor();
+            else if(n.compareTo("zscore") == 0)
+                Evaluator.nml = new ZScoreNormalizor();
+            else if(n.compareTo("linear") == 0)
+                Evaluator.nml = new LinearNormalizer();
+            else
+            {
+                return generateError("Unknown normalizor: " + n);
+            }
         }
 
         if(data.getParameter("sparse") != null) {
-
+            useSparseRepresentation = true;
         }
 
         if(data.getParameter("save") != null) {
-
+            modelFile = (String) data.getParameter("save");
         }
 
         if(data.getParameter("kcvmd") != null) {
-
+            kcvModelDir = (String) data.getParameter("kcvmd");
         }
 
         if(data.getParameter("kcvmn") != null) {
-
+            kcvModelFile = (String) data.getParameter("kcvmn");
         }
 
         if(data.getParameter("silent") != null) {
-
+            Ranker.verbose = false;
         }
 
         if(data.getParameter("load") != null) {
-
+            savedModelFile = (String) data.getParameter("load");
+            savedModelFiles.add(savedModelFile);
         }
 
         if(data.getParameter("idv") != null) {
-
+            prpFile = (String) data.getParameter("idv");
         }
 
         if(data.getParameter("rank") != null) {
-
+            rankFile = (String) data.getParameter("rank");
         }
 
         if(data.getParameter("score") != null) {
-
+            scoreFile = (String) data.getParameter("score");
         }
 
+
+        //Ranker-specific parameters
         if(data.getParameter("epoch") != null) {
-
+            RankNet.nIteration = (int) data.getParameter("epoch");
+            ListNet.nIteration = (int) data.getParameter("epoch");
         }
-
 
         if(data.getParameter("layer") != null) {
-
+            RankNet.nHiddenLayer = (int) data.getParameter("layer");
         }
 
 
         if(data.getParameter("node") != null) {
-
+            RankNet.nHiddenNodePerLayer = (int) data.getParameter("node");
         }
 
 
         if(data.getParameter("lr") != null) {
-
+            RankNet.learningRate = (double) data.getParameter("lr");
+            ListNet.learningRate = Neuron.learningRate;
         }
 
-
+        //RankBoost
         if(data.getParameter("tc") != null) {
-
+            RankBoost.nThreshold = (int) data.getParameter("tc");
+            LambdaMART.nThreshold = (int) data.getParameter("tc");
         }
 
         if(data.getParameter("noeg") != null) {
-
+            AdaRank.trainWithEnqueue = false;
         }
 
         if(data.getParameter("max") != null) {
-
+            AdaRank.maxSelCount = (int) data.getParameter("max");
         }
 
+            //COORDINATE ASCENT
         if(data.getParameter("r") != null) {
-
+            CoorAscent.nRestart = (int) data.getParameter("r");
         }
 
         if(data.getParameter("i") != null) {
-
+            CoorAscent.nMaxIteration = (int) data.getParameter("i");
         }
 
+        //ranker-shared parameters
         if(data.getParameter("round") != null) {
-
+            RankBoost.nIteration = (int) data.getParameter("round");
+            AdaRank.nIteration = (int) data.getParameter("round");
         }
 
         if(data.getParameter("reg") != null) {
-
+            CoorAscent.slack = (double) data.getParameter("reg");
+            CoorAscent.regularized = true;
         }
 
         if(data.getParameter("tolerance") != null) {
-
+            AdaRank.tolerance = (double) data.getParameter("tolerance");
+            CoorAscent.tolerance = (double) data.getParameter("tolerance");
         }
 
+        //MART / LambdaMART / Random forest
         if(data.getParameter("tree") != null) {
-
+            LambdaMART.nTrees = (int) data.getParameter("tree");
+            RFRanker.nTrees = (int) data.getParameter("tree");
         }
 
         if(data.getParameter("leaf") != null) {
-
+            LambdaMART.nTreeLeaves = (int) data.getParameter("leaf");
+            RFRanker.nTreeLeaves = (int) data.getParameter("leaf");
         }
 
         if(data.getParameter("shrinkage") != null) {
-
+            LambdaMART.learningRate = (float) data.getParameter("shrinkage");
+            RFRanker.learningRate = (float) data.getParameter("shrinkage");
         }
 
         if(data.getParameter("mls") != null) {
-
+            LambdaMART.minLeafSupport = (int) data.getParameter("mls");
+            RFRanker.minLeafSupport = LambdaMART.minLeafSupport;
         }
 
         if(data.getParameter("estop") != null) {
-
+            LambdaMART.nRoundToStopEarly = (int) data.getParameter("estop");
         }
 
         if(data.getParameter("gcc") != null) {
-
+            LambdaMART.gcCycle = (int) data.getParameter("gcc");
         }
 
         if(data.getParameter("bag") != null) {
-
+            RFRanker.nBag = (int) data.getParameter("bag");
         }
 
         if(data.getParameter("srate") != null) {
-
+            RFRanker.subSamplingRate = (float) data.getParameter("srate");
         }
 
         if(data.getParameter("frate") != null) {
-
+            RFRanker.featureSamplingRate = (float) data.getParameter("frate");
         }
 
         if(data.getParameter("rtype") != null) {
-
+            int rt = (int) data.getParameter("rtype");
+            if(rt == 0 || rt == 6)
+                RFRanker.rType = rType2[rt];
+            else
+            {
+                return generateError(rType[rt] + " cannot be bagged. Random Forests only supports MART/LambdaMART.");
+            }
         }
 
         if(data.getParameter("L2") != null) {
+            LinearRegRank.lambda = (double) data.getParameter("L2");
 
         }
 
         if(data.getParameter("thread") != null) {
-
+            nThread = (int) data.getParameter("thread");
         }
 
         if(nThread == -1)
@@ -391,6 +444,64 @@ public class RankLib implements ProcessingService {
             }
         }
 
+        else //scenario: test a saved model
+        {
+            out.append("Model file:\t" + savedModelFile);
+            out.append("Feature normalization: " + ((Evaluator.normalize)?Evaluator.nml.name():"No"));
+            if(rankFile.compareTo("") != 0)
+            {
+                if(scoreFile.compareTo("") != 0)
+                {
+                    if(savedModelFiles.size() > 1)//models trained via cross-validation
+                        e.score(savedModelFiles, rankFile, scoreFile);
+                    else //a single model
+                        e.score(savedModelFile, rankFile, scoreFile);
+                }
+                else if(indriRankingFile.compareTo("") != 0)
+                {
+                    if(savedModelFiles.size() > 1)//models trained via cross-validation
+                        e.rank(savedModelFiles, rankFile, indriRankingFile);
+                    else if(savedModelFiles.size() == 1)
+                        e.rank(savedModelFile, rankFile, indriRankingFile);
+                        //This is *ONLY* for my personal use. It is *NOT* exposed via cmd-line
+                        //It will evaluate the input ranking (without being re-ranked by any model) using any measure specified via metric2T
+                    else
+                        e.rank(rankFile, indriRankingFile);
+                }
+                else
+                {
+                    return generateError("This function has been removed.\n" +
+                            "Consider using -score in addition to your current parameters, " +
+                            "and do the ranking yourself based on these scores.");
+                    //e.rank(savedModelFile, rankFile);
+                }
+            }
+            else
+            {
+                out.append("Test metric:\t" + testMetric);
+                if(testMetric.startsWith("ERR"))
+                    out.append("Highest relevance label (to compute ERR): " + (int)SimpleMath.logBase2(ERRScorer.MAX));
+
+                if(savedModelFile.compareTo("") != 0)
+                {
+                    if(savedModelFiles.size() > 1)//models trained via cross-validation
+                    {
+                        if(testFiles.size() > 1)
+                            e.test(savedModelFiles, testFiles, prpFile);
+                        else
+                            e.test(savedModelFiles, testFile, prpFile);
+                    }
+                    else if(savedModelFiles.size() == 1) // a single model
+                        e.test(savedModelFile, testFile, prpFile);
+                }
+                else if(scoreFile.compareTo("") != 0)
+                    e.testWithScoreFile(testFile, scoreFile);
+                    //It will evaluate the input ranking (without being re-ranked by any model) using any measure specified via metric2T
+                else
+                    e.test(testFile, prpFile);
+            }
+        }
+
         MyThreadPool.getInstance().shutdown();
 
 
@@ -401,26 +512,6 @@ public class RankLib implements ProcessingService {
         return output.asPrettyJson();
     }
 
-    //main settings
-    public static boolean mustHaveRelDoc = false;
-    public static boolean useSparseRepresentation = false;
-    public static boolean normalize = false;
-    public static Normalizer nml = new SumNormalizor();
-    public static String modelFile = "";
-
-    public static String qrelFile = "";//measure such as NDCG and MAP requires "complete" judgment.
-    //The relevance labels attached to our samples might be only a subset of the entire relevance judgment set.
-    //If we're working on datasets like Letor/Web10K or Yahoo! LTR, we can totally ignore this parameter.
-    //However, if we sample top-K documents from baseline run (e.g. query-likelihood) to create training data for TREC collections,
-    //there's a high chance some relevant document (the in qrel file TREC provides) does not appear in our top-K list -- thus the calculation of
-    //MAP and NDCG is no longer precise. If so, specify that "external" relevance judgment here (via the -qrel cmd parameter)
-
-    protected RankerFactory rFact = new RankerFactory();
-    protected MetricScorerFactory mFact = new MetricScorerFactory();
-
-    protected MetricScorer trainScorer = null;
-    protected MetricScorer testScorer = null;
-    protected RANKER_TYPE type = RANKER_TYPE.MART;
 
     private String generateError(String message)
     {
