@@ -65,7 +65,6 @@ public class RankLib implements ProcessingService {
         IOSpecification produces = new IOSpecification();
         produces.addFormat(Discriminators.Uri.LAPPS);
         produces.addAnnotation(Discriminators.Uri.TOKEN);
-        requires.addLanguage("en");
 
         metadata.setRequires(requires);
         metadata.setProduces(produces);
@@ -352,8 +351,11 @@ public class RankLib implements ProcessingService {
             nThread = (int) data.getParameter("thread");
         }
 
-        if(nThread == -1)
+        if(nThread == -1) {
             nThread = Runtime.getRuntime().availableProcessors();
+            if(nThread > 4)
+                nThread = 4;
+        }
         MyThreadPool.init(nThread);
 
         if(testMetric.compareTo("")==0)
