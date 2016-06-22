@@ -50,7 +50,7 @@ public class RankLibTest
         System.out.println("RankLib.testExecute");
 
         //Todo: Input
-        Data<String> data = new Data<>(Discriminators.Uri.GET, );
+        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
 
         //
         //data.setParameter("unit", "km");
@@ -65,7 +65,7 @@ public class RankLibTest
         System.out.println("TwitterDatasourceTest.testErrorInput");
         String message = "This is an error message";
         Data<String> data = new Data<>(Discriminators.Uri.ERROR, message);
-        String json = twitter.execute(data.asJson());
+        String json = rankLib.execute(data.asJson());
         assertNotNull("No JSON returned from the service", json);
 
         data = Serializer.parse(json, Data.class);
@@ -77,7 +77,7 @@ public class RankLibTest
     public void testInvalidDiscriminator()
     {
         Data<String> data = new Data<>(Discriminators.Uri.QUERY, "Donald Trump");
-        String json = twitter.execute(data.asJson());
+        String json = rankLib.execute(data.asJson());
         assertNotNull("No JSON returned from the service", json);
         data = Serializer.parse(json, Data.class);
         assertEquals("Invalid discriminator returned: " + data.getDiscriminator(), Discriminators.Uri.ERROR, data.getDiscriminator());

@@ -55,7 +55,7 @@ public class RankLib implements ProcessingService {
         ServiceMetadata metadata = new ServiceMetadata();
         metadata.setName(this.getClass().getName());
         metadata.setDescription("RankLib from The Lemur Project");
-        metadata.setVersion("1.0.0-SNAPSHOT");
+        metadata.setVersion(Version.getVersion());
         metadata.setVendor("http://www.lappsgrid.org");
         metadata.setLicense(Discriminators.Uri.APACHE2);
 

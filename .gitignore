@@ -12,3 +12,4 @@ buildNumber.properties
 *.ipr
 *.iml
 VERSION
+src/main/java/org/anc/lapps/ranklib/Version.java
