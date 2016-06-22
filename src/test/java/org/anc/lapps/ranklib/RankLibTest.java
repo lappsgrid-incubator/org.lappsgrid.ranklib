@@ -50,10 +50,7 @@ public class RankLibTest
         System.out.println("RankLib.testExecute");
 
         //Todo: Input
-        Data<String> data = new Data<>(Discriminators.Uri.GET, );
-
-        //
-        //data.setParameter("unit", "km");
+        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
