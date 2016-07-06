@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.lappsgrid.discriminator.Discriminators;
-import org.lappsgrid.metadata.DataSourceMetadata;
+import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
 
@@ -36,11 +36,11 @@ public class RankLibTest
     {
         System.out.println("RankLib.testMetadata");
         String json = rankLib.getMetadata();
-        DataSourceMetadata metadata = Serializer.parse(json, DataSourceMetadata.class);
-        expect("http://www.anc.org", metadata.getVendor());
+        Data<ServiceMetadata> data = Serializer.parse(json, Data.class);
+        ServiceMetadata metadata = data.getPayload();
+        expect("http://www.lappsgrid.org", metadata.getVendor());
         expect(Discriminators.Uri.ANY, metadata.getAllow());
         expect(Discriminators.Uri.APACHE2, metadata.getLicense());
-        expect("UTF-8", metadata.getEncoding());
         expect(Version.getVersion(), metadata.getVersion());
     }
 
@@ -131,7 +131,7 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, "");
 
-        data.setParameter("params", "-load ca.model.txt -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/ca.ndcg.txt");
+        data.setParameter("params", "-load models/f1.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f1.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -144,7 +144,7 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, "");
 
-        data.setParameter("params", "-load lm.model.txt -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/lm.ndcg.txt");
+        data.setParameter("params", "-load models/f2.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f2.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
