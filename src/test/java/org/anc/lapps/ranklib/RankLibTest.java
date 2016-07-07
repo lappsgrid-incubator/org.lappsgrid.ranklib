@@ -4,13 +4,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.lappsgrid.discriminator.Discriminators;
+import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Alexandru Mahmoud
@@ -34,14 +34,30 @@ public class RankLibTest
     @Test
     public void testMetadata()
     {
-        System.out.println("RankLib.testMetadata");
         String json = rankLib.getMetadata();
-        Data<ServiceMetadata> data = Serializer.parse(json, Data.class);
-        ServiceMetadata metadata = data.getPayload();
-        expect("http://www.lappsgrid.org", metadata.getVendor());
-        expect(Discriminators.Uri.ANY, metadata.getAllow());
-        expect(Discriminators.Uri.APACHE2, metadata.getLicense());
-        expect(Version.getVersion(), metadata.getVersion());
+        assertNotNull("service.getMetadata() returned null", json);
+
+        Data data = Serializer.parse(json, Data.class);
+        assertNotNull("Unable to parse metadata json.", data);
+        assertNotSame(data.getPayload().toString(), Discriminators.Uri.ERROR, data.getDiscriminator());
+
+        ServiceMetadata metadata = new ServiceMetadata((Map) data.getPayload());
+
+        assertEquals("Vendor is not correct", "http://www.lappsgrid.org", metadata.getVendor());
+        assertEquals("Name is not correct", RankLib.class.getName(), metadata.getName());
+        assertEquals("Version is not correct.","1.0-SNAPSHOT" , metadata.getVersion());
+        assertEquals("License is not correct", Discriminators.Uri.APACHE2, metadata.getLicense());
+
+        IOSpecification produces = metadata.getProduces();
+        assertEquals("Produces encoding is not correct", "UTF-8", produces.getEncoding());
+        assertEquals("Too many annotation types produced", 1, produces.getAnnotations().size());
+        assertEquals("Tokens not produced", Discriminators.Uri.TOKEN, produces.getAnnotations().get(0));
+        assertEquals("Too many output formats", 1, produces.getFormat().size());
+        assertEquals("LIF not produced", Discriminators.Uri.LAPPS, produces.getFormat().get(0));
+
+        IOSpecification requires = metadata.getRequires();
+        assertEquals("Requires encoding is not correct", "UTF-8", requires.getEncoding());
+        assertEquals("Requires Discriminator is not correct", Discriminators.Uri.GET, requires.getFormat().get(0));
     }
 
     @Test
@@ -203,10 +219,5 @@ public class RankLibTest
         System.out.println(data.getPayload());
     }
 
-    private void expect(String expected, String actual)
-    {
-        String message = String.format("Expected: %s Actual: %s", expected, actual);
-        assertTrue(message, actual.equals(expected));
-    }
 }
 

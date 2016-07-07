@@ -23,13 +23,15 @@ import java.util.regex.PatternSyntaxException;
 
 public class RankLib implements ProcessingService {
 
+    /**
+     * The Json String required by getMetadata()
+     */
     private String metadata;
     private static final Logger logger = LoggerFactory.getLogger(RankLib.class);
 
     public RankLib() {
 
         metadata = generateMetadata();
-
     }
 
     private String generateMetadata() {
@@ -41,13 +43,14 @@ public class RankLib implements ProcessingService {
         metadata.setVendor("http://www.lappsgrid.org");
         metadata.setLicense(Discriminators.Uri.APACHE2);
 
-
         IOSpecification requires = new IOSpecification();
         requires.addFormat(Discriminators.Uri.GET);
+        requires.setEncoding("UTF-8");
 
         IOSpecification produces = new IOSpecification();
         produces.addFormat(Discriminators.Uri.LAPPS);
         produces.addAnnotation(Discriminators.Uri.TOKEN);
+        produces.setEncoding("UTF-8");
 
         metadata.setRequires(requires);
         metadata.setProduces(produces);
@@ -56,7 +59,6 @@ public class RankLib implements ProcessingService {
         data.setDiscriminator(Discriminators.Uri.META);
         data.setPayload(metadata);
         return data.asPrettyJson();
-
     }
 
     @Override
@@ -90,7 +92,6 @@ public class RankLib implements ProcessingService {
      */
     @Override
     public String execute(String input) {
-
         // Parse the JSON string into a Data object, and extract its discriminator.
         Data<String> data = Serializer.parse(input, Data.class);
         String discriminator = data.getDiscriminator();
@@ -104,7 +105,9 @@ public class RankLib implements ProcessingService {
         // If the Input discriminator is not GET, return a wrapped Error with an appropriate message.
         if (!Discriminators.Uri.GET.equals(discriminator))
         {
-            return generateError("Invalid discriminator.\nExpected " + Discriminators.Uri.GET + "\nFound " + discriminator);
+            String errorData = generateError("Invalid discriminator.\nExpected " + Discriminators.Uri.GET + "\nFound " + discriminator);
+            logger.error(errorData);
+            return errorData;
         }
 
         // Create a stream to hold the output
@@ -115,14 +118,15 @@ public class RankLib implements ProcessingService {
         // Set the special stream
         System.setOut(ps);
 
-
         // Output an error if no parameters are given
         if(data.getParameter("params") == null) {
             // Set System.out back
             System.out.flush();
             System.setOut(old);
             // Wrap and output the error
-            return generateError("No parameters given.");
+            String errorData = generateError("No parameters given.");
+            logger.error(errorData);
+            return errorData;
         }
 
         else {
@@ -137,7 +141,9 @@ public class RankLib implements ProcessingService {
                 // Set System.out back
                 System.out.flush();
                 System.setOut(old);
-                return generateError("Error in processing parameters.");
+                String errorData = generateError("Error in processing parameters.");
+                logger.error(errorData);
+                return errorData;
             }
 
             // If no classpath is given, call Evaluator's main function, which is the main
@@ -145,7 +151,7 @@ public class RankLib implements ProcessingService {
             if(data.getParameter("cp") == null)
                 Evaluator.main(paramsArray);
 
-            // If a classpath is given, get the classpath string
+                // If a classpath is given, get the classpath string
             else {
                 String cp = (String) data.getParameter("cp");
 
@@ -153,17 +159,19 @@ public class RankLib implements ProcessingService {
                 if(cp.contains("FeatureManager"))
                     FeatureManager.main(paramsArray);
 
-                // If the classpath is the FeatureManager, run its main function
+                    // If the classpath is the FeatureManager, run its main function
                 else if(cp.contains("Analyzer"))
                     Analyzer.main(paramsArray);
 
-                // If an unknown classpath is given, output a wrapped error
+                    // If an unknown classpath is given, output a wrapped error
                 else {
                     // Set System.out back
                     System.out.flush();
                     System.setOut(old);
 
-                    return generateError("Classpath given not recognized:" + cp);
+                    String errorData = generateError("Classpath given not recognized:" + cp);
+                    logger.error(errorData);
+                    return errorData;
                 }
             }
 
@@ -179,7 +187,6 @@ public class RankLib implements ProcessingService {
         }
     }
 
-
     /** This method takes an error message and returns it in a {@code Data}
      * object with the discriminator set to http://vocab.lappsgrid.org/ns/error
      *
@@ -193,5 +200,4 @@ public class RankLib implements ProcessingService {
         data.setPayload(message);
         return data.asPrettyJson();
     }
-
 }
