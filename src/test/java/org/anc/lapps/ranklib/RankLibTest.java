@@ -174,7 +174,7 @@ public class RankLibTest
         Data<String> data = new Data<>(Discriminators.Uri.GET, "");
 
         data.setParameter("cp", "ciir.umass.edu.eval.Analyzer");
-        data.setParameter("params", "-all output/ -base baseline.ndcg.txt > analysis.txt");
+        data.setParameter("params", "-all output/ -base baseline.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
