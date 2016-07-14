@@ -6,7 +6,9 @@ RankLib from the Lemur Project
 # Usage
 
 Takes a Data<String> object with a Uri.GET ("http://vocab.lappsgrid.org/ns/action/get") discriminator and a string payload representing the command-line parameters.
-Eg: -train training.txt -ranker RankNet -silent
+
+>Eg: -train training.txt -ranker RankNet -silent
+
 Optional parameters are listed below.
 
 # Parameters
