@@ -98,13 +98,10 @@ public class RankLib implements ProcessingService {
 
         // If the Input discriminator is ERROR, return the Data as is.
         if (Discriminators.Uri.ERROR.equals(discriminator))
-        {
             return input;
-        }
 
         // If the Input discriminator is not GET, return a wrapped Error with an appropriate message.
-        if (!Discriminators.Uri.GET.equals(discriminator))
-        {
+        if (!Discriminators.Uri.GET.equals(discriminator)) {
             String errorData = generateError("Invalid discriminator.\nExpected " + Discriminators.Uri.GET + "\nFound " + discriminator);
             logger.error(errorData);
             return errorData;
@@ -131,7 +128,7 @@ public class RankLib implements ProcessingService {
 
         else {
             // Get the parameters
-            String params = (String) data.getPayload();
+            String params = data.getPayload();
             String[] paramsArray;
 
             // Split the parameters into an array
@@ -141,51 +138,52 @@ public class RankLib implements ProcessingService {
                 // Set System.out back
                 System.out.flush();
                 System.setOut(old);
-                String errorData = generateError("Error in processing parameters.");
+                String errorData = generateError("Error in parameter syntax.");
                 logger.error(errorData);
                 return errorData;
             }
 
+            // Get Classpath parameter.
+            String cp = null;
+            if(data.getParameter("cp") != null)
+                cp = (String) data.getParameter("cp");
+
             // If no classpath is given, call Evaluator's main function, which is the main
             // classpath of the jar file
-            if(data.getParameter("cp") == null)
+            if((cp == null) || cp.contains("Evaluator"))
                 Evaluator.main(paramsArray);
 
-                // If a classpath is given, get the classpath string
-            else {
-                String cp = (String) data.getParameter("cp");
+                // If the classpath is the FeatureManager, run its main function
+            else if(cp.contains("FeatureManager"))
+                FeatureManager.main(paramsArray);
 
                 // If the classpath is the FeatureManager, run its main function
-                if(cp.contains("FeatureManager"))
-                    FeatureManager.main(paramsArray);
+            else if(cp.contains("Analyzer"))
+                Analyzer.main(paramsArray);
 
-                    // If the classpath is the FeatureManager, run its main function
-                else if(cp.contains("Analyzer"))
-                    Analyzer.main(paramsArray);
+                // If an unknown classpath is given, output a wrapped error
+            else {
+                // Set System.out back
+                System.out.flush();
+                System.setOut(old);
 
-                    // If an unknown classpath is given, output a wrapped error
-                else {
-                    // Set System.out back
-                    System.out.flush();
-                    System.setOut(old);
-
-                    String errorData = generateError("Classpath given not recognized:" + cp);
-                    logger.error(errorData);
-                    return errorData;
-                }
+                String errorData = generateError("Classpath given not recognized:" + cp);
+                logger.error(errorData);
+                return errorData;
             }
-
-            // Set System.out back
-            System.out.flush();
-            System.setOut(old);
-
-            // Output results
-            Container container = new Container();
-            container.setText(baos.toString());
-            Data<Container> output = new Data<>(Discriminators.Uri.LAPPS, container);
-            return output.asPrettyJson();
         }
+
+        // Set System.out back
+        System.out.flush();
+        System.setOut(old);
+
+        // Output results
+        Container container = new Container();
+        container.setText(baos.toString());
+        Data<Container> output = new Data<>(Discriminators.Uri.LAPPS, container);
+        return output.asPrettyJson();
     }
+
 
     /** This method takes an error message and returns it in a {@code Data}
      * object with the discriminator set to http://vocab.lappsgrid.org/ns/error
@@ -193,8 +191,7 @@ public class RankLib implements ProcessingService {
      * @param message A string representing the error message
      * @return A JSON string containing a Data object with the message as a payload.
      */
-    private String generateError(String message)
-    {
+    private String generateError(String message) {
         Data<String> data = new Data<>();
         data.setDiscriminator(Discriminators.Uri.ERROR);
         data.setPayload(message);
