@@ -21,7 +21,8 @@ import java.util.regex.PatternSyntaxException;
  * @author Alexandru Mahmoud
  */
 
-public class RankLib implements ProcessingService {
+public class RankLib implements ProcessingService
+{
 
     /**
      * The Json String required by getMetadata()
@@ -29,13 +30,10 @@ public class RankLib implements ProcessingService {
     private String metadata;
     private static final Logger logger = LoggerFactory.getLogger(RankLib.class);
 
-    public RankLib() {
+    public RankLib() { metadata = generateMetadata(); }
 
-        metadata = generateMetadata();
-    }
-
-    private String generateMetadata() {
-
+    private String generateMetadata()
+    {
         ServiceMetadata metadata = new ServiceMetadata();
         metadata.setName(this.getClass().getName());
         metadata.setDescription("RankLib from The Lemur Project");
@@ -91,17 +89,20 @@ public class RankLib implements ProcessingService {
      * @return A JSON string containing a Data object with a Container payload.
      */
     @Override
-    public String execute(String input) {
+    public String execute(String input)
+    {
         // Parse the JSON string into a Data object, and extract its discriminator.
         Data<String> data = Serializer.parse(input, Data.class);
         String discriminator = data.getDiscriminator();
 
         // If the Input discriminator is ERROR, return the Data as is.
-        if (Discriminators.Uri.ERROR.equals(discriminator))
+        if (Discriminators.Uri.ERROR.equals(discriminator)) {
             return input;
+        }
 
         // If the Input discriminator is not GET, return a wrapped Error with an appropriate message.
-        if (!Discriminators.Uri.GET.equals(discriminator)) {
+        if (!Discriminators.Uri.GET.equals(discriminator))
+        {
             String errorData = generateError("Invalid discriminator.\nExpected " + Discriminators.Uri.GET + "\nFound " + discriminator);
             logger.error(errorData);
             return errorData;
@@ -116,7 +117,8 @@ public class RankLib implements ProcessingService {
         System.setOut(ps);
 
         // Output an error if no parameters are given
-        if(data.getPayload() == null) {
+        if (data.getPayload() == null)
+        {
             // Set System.out back
             System.out.flush();
             System.setOut(old);
@@ -126,7 +128,8 @@ public class RankLib implements ProcessingService {
             return errorData;
         }
 
-        else {
+        else
+            {
             // Get the parameters
             String params = data.getPayload();
             String[] paramsArray;
@@ -145,24 +148,29 @@ public class RankLib implements ProcessingService {
 
             // Get Classpath parameter.
             String cp = null;
-            if(data.getParameter("cp") != null)
+            if (data.getParameter("cp") != null) {
                 cp = (String) data.getParameter("cp");
+            }
 
             // If no classpath is given, call Evaluator's main function, which is the main
             // classpath of the jar file
-            if((cp == null) || cp.contains("Evaluator"))
+            if ((cp == null) || cp.contains("Evaluator")) {
                 Evaluator.main(paramsArray);
+            }
 
-                // If the classpath is the FeatureManager, run its main function
-            else if(cp.contains("FeatureManager"))
+            // If the classpath is the FeatureManager, run its main function
+            else if (cp.contains("FeatureManager")) {
                 FeatureManager.main(paramsArray);
+            }
 
-                // If the classpath is the FeatureManager, run its main function
-            else if(cp.contains("Analyzer"))
+            // If the classpath is the FeatureManager, run its main function
+            else if (cp.contains("Analyzer"))
+            {
                 Analyzer.main(paramsArray);
-
+            }
                 // If an unknown classpath is given, output a wrapped error
-            else {
+            else
+                {
                 // Set System.out back
                 System.out.flush();
                 System.setOut(old);
@@ -191,7 +199,8 @@ public class RankLib implements ProcessingService {
      * @param message A string representing the error message
      * @return A JSON string containing a Data object with the message as a payload.
      */
-    private String generateError(String message) {
+    private String generateError(String message)
+    {
         Data<String> data = new Data<>();
         data.setDiscriminator(Discriminators.Uri.ERROR);
         data.setPayload(message);
