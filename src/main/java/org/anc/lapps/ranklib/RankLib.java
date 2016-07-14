@@ -119,7 +119,7 @@ public class RankLib implements ProcessingService {
         System.setOut(ps);
 
         // Output an error if no parameters are given
-        if(data.getParameter("params") == null) {
+        if(data.getPayload() == null) {
             // Set System.out back
             System.out.flush();
             System.setOut(old);
@@ -131,7 +131,7 @@ public class RankLib implements ProcessingService {
 
         else {
             // Get the parameters
-            String params = (String) data.getParameter("params");
+            String params = (String) data.getPayload();
             String[] paramsArray;
 
             // Split the parameters into an array

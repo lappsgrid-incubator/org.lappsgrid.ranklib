@@ -65,9 +65,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample1");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-train MQ2008/Fold1/train.txt -test MQ2008/Fold1/test.txt -validate MQ2008/Fold1/vali.txt -ranker 6 -metric2t NDCG@10 -metric2T ERR@10 -save mymodel.txt");
+        data.setPayload("-train MQ2008/Fold1/train.txt -test MQ2008/Fold1/test.txt -validate MQ2008/Fold1/vali.txt -ranker 6 -metric2t NDCG@10 -metric2T ERR@10 -save mymodel.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -78,9 +78,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample2");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-train MQ2008/Fold1/train.txt -ranker 4 -kcv 5 -kcvmd models/ -kcvmn ca -metric2t NDCG@10 -metric2T ERR@10");
+        data.setPayload("-train MQ2008/Fold1/train.txt -ranker 4 -kcv 5 -kcvmd models/ -kcvmn ca -metric2t NDCG@10 -metric2T ERR@10");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -91,10 +91,10 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample3");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.Features.FeatureManager");
-        data.setParameter("params", "-input MQ2008/Fold1/train.txt -output mydata/ -shuffle");
+        data.setPayload("-input MQ2008/Fold1/train.txt -output mydata/ -shuffle");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -105,10 +105,10 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample4");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.features.FeatureManager");
-        data.setParameter("params", "-input MQ2008/Fold1/train.txt -output mydata/ -k 5");
+        data.setPayload("-input MQ2008/Fold1/train.txt -output mydata/ -k 5");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -119,9 +119,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample5");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-load mymodel.txt -test MQ2008/Fold1/test.txt -metric2T ERR@10");
+        data.setPayload("-load mymodel.txt -test MQ2008/Fold1/test.txt -metric2T ERR@10");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -132,9 +132,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample6");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/baseline.ndcg.txt");
+        data.setPayload("-test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/baseline.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -145,9 +145,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample7");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-load models/f1.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f1.ca.ndcg.txt");
+        data.setPayload("-load models/f1.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f1.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -158,9 +158,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample8");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-load models/f2.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f2.ca.ndcg.txt");
+        data.setPayload("-load models/f2.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f2.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -171,10 +171,10 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteAnalysis");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.eval.Analyzer");
-        data.setParameter("params", "-all output/ -base baseline.ndcg.txt");
+        data.setPayload("-all output/ -base baseline.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -185,9 +185,9 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample9");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, "");
+        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setParameter("params", "-load mymodel.txt -rank MQ2008/Fold1/test.txt -score myscorefile.txt");
+        data.setPayload("-load mymodel.txt -rank MQ2008/Fold1/test.txt -score myscorefile.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -211,7 +211,7 @@ public class RankLibTest
     public void testInvalidDiscriminator()
     {
         System.out.println("RankLib.testInvalidDiscriminator");
-        Data<String> data = new Data<>(Discriminators.Uri.QUERY, "");
+        Data<String> data = new Data<>(Discriminators.Uri.QUERY, "-train");
         String json = rankLib.execute(data.asJson());
         assertNotNull("No JSON returned from the service", json);
         data = Serializer.parse(json, Data.class);
