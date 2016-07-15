@@ -8,6 +8,15 @@ import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -65,9 +74,31 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample1");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-train MQ2008/Fold1/train.txt -test MQ2008/Fold1/test.txt -validate MQ2008/Fold1/vali.txt -ranker 6 -metric2t NDCG@10 -metric2T ERR@10 -save mymodel.txt");
+        String trainTxt = "";
+        String testTxt = "";
+        String validateTxt = "";
+
+        try
+        {
+            trainTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            validateTxt = rankLib.readFile("MQ2008/Fold1/vali.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("train", trainTxt);
+        payload.put("test", testTxt);
+        payload.put("validate", validateTxt);
+        String json = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, json);
+
+        data.setParameter("ranker", "6");
+        data.setParameter("metric2t", "NDCG@10");
+        data.setParameter("metric2T", "ERR@10");
+        data.setParameter("save", "myModel");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -78,9 +109,25 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample2");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String trainTxt = "";
 
-        data.setPayload("-train MQ2008/Fold1/train.txt -ranker 4 -kcv 5 -kcvmd models/ -kcvmn ca -metric2t NDCG@10 -metric2T ERR@10");
+        try
+        {
+            trainTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("train", trainTxt);
+        String json = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, json);
+
+        data.setParameter("ranker", "4");
+        data.setParameter("kcv", "5");
+        data.setParameter("saveCrossValidationModels", "ca");
+        data.setParameter("metric2t", "NDCG@10");
+        data.setParameter("metric2T", "ERR@10");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -94,7 +141,9 @@ public class RankLibTest
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.Features.FeatureManager");
-        data.setPayload("-input MQ2008/Fold1/train.txt -output mydata/ -shuffle");
+        data.setParameter("input", "MQ2008/Fold1/train.txt");
+        data.setParameter("output", "mydata/");
+        data.setParameter("shuffle", true);
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -108,7 +157,9 @@ public class RankLibTest
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.features.FeatureManager");
-        data.setPayload("-input MQ2008/Fold1/train.txt -output mydata/ -k 5");
+        data.setParameter("input", "MQ2008/Fold1/train.txt");
+        data.setParameter("output", "mydata/");
+        data.setParameter("k", "5");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -121,7 +172,9 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-load mymodel.txt -test MQ2008/Fold1/test.txt -metric2T ERR@10");
+        data.setParameter("load", "mymodel.txt");
+        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        data.setParameter("metric2T", "ERR@10");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -134,7 +187,9 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/baseline.ndcg.txt");
+        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        data.setParameter("metric2T", "NDCG@10");
+        data.setParameter("idv", "output/baseline.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -147,7 +202,10 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-load models/f1.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f1.ca.ndcg.txt");
+        data.setParameter("load", "models/f1.ca");
+        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        data.setParameter("metric2T", "NDCG@10");
+        data.setParameter("idv", "output/f1.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -160,7 +218,10 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-load models/f2.ca -test MQ2008/Fold1/test.txt -metric2T NDCG@10 -idv output/f2.ca.ndcg.txt");
+        data.setParameter("load", "models/f2.ca");
+        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        data.setParameter("metric2T", "NDCG@10");
+        data.setParameter("idv", "output/f2.ca.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -174,7 +235,8 @@ public class RankLibTest
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
         data.setParameter("cp", "ciir.umass.edu.eval.Analyzer");
-        data.setPayload("-all output/ -base baseline.ndcg.txt");
+        data.setParameter("all", "output/");
+        data.setParameter("base", "baseline.ndcg.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -187,7 +249,9 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET);
 
-        data.setPayload("-load mymodel.txt -rank MQ2008/Fold1/test.txt -score myscorefile.txt");
+        data.setParameter("load", "mymodel.txt");
+        data.setParameter("rank", "MQ2008/Fold1/test.txt");
+        data.setParameter("score", "myscorefile.txt");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -218,7 +282,6 @@ public class RankLibTest
         assertEquals("Invalid discriminator returned: " + data.getDiscriminator(), Discriminators.Uri.ERROR, data.getDiscriminator());
         System.out.println(data.getPayload());
     }
-
 
 }
 
