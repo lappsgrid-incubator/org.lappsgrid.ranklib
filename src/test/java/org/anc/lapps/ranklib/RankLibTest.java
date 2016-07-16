@@ -43,10 +43,10 @@ public class RankLibTest
     @Test
     public void testMetadata()
     {
-        String json = rankLib.getMetadata();
-        assertNotNull("service.getMetadata() returned null", json);
+        String jsonMetadata = rankLib.getMetadata();
+        assertNotNull("service.getMetadata() returned null", jsonMetadata);
 
-        Data data = Serializer.parse(json, Data.class);
+        Data data = Serializer.parse(jsonMetadata, Data.class);
         assertNotNull("Unable to parse metadata json.", data);
         assertNotSame(data.getPayload().toString(), Discriminators.Uri.ERROR, data.getDiscriminator());
 
@@ -74,7 +74,6 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample1");
 
-
         String trainTxt = "";
         String testTxt = "";
         String validateTxt = "";
@@ -91,9 +90,9 @@ public class RankLibTest
         payload.put("train", trainTxt);
         payload.put("test", testTxt);
         payload.put("validate", validateTxt);
-        String json = Serializer.toJson(payload);
+        String jsonPayload = Serializer.toJson(payload);
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, json);
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
         data.setParameter("ranker", "6");
         data.setParameter("metric2t", "NDCG@10");
@@ -119,9 +118,9 @@ public class RankLibTest
 
         Map<String,String> payload = new HashMap<>();
         payload.put("train", trainTxt);
-        String json = Serializer.toJson(payload);
+        String jsonPayload = Serializer.toJson(payload);
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET, json);
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
         data.setParameter("ranker", "4");
         data.setParameter("kcv", "5");
@@ -138,11 +137,21 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample3");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String inputTxt = "";
 
-        data.setParameter("cp", "ciir.umass.edu.Features.FeatureManager");
-        data.setParameter("input", "MQ2008/Fold1/train.txt");
-        data.setParameter("output", "mydata/");
+        try
+        {
+            inputTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("input", inputTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
+        data.setParameter("program", "FeatureManager");
         data.setParameter("shuffle", true);
 
         String response = rankLib.execute(data.asJson());
@@ -154,11 +163,21 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample4");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String inputTxt = "";
 
-        data.setParameter("cp", "ciir.umass.edu.features.FeatureManager");
-        data.setParameter("input", "MQ2008/Fold1/train.txt");
-        data.setParameter("output", "mydata/");
+        try
+        {
+            inputTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("input", inputTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
+        data.setParameter("program", "FeatureManager");
         data.setParameter("k", "5");
 
         String response = rankLib.execute(data.asJson());
@@ -170,10 +189,23 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample5");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String loadTxt = "";
+        String testTxt = "";
 
-        data.setParameter("load", "mymodel.txt");
-        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        try
+        {
+            loadTxt = rankLib.readFile("mymodel.txt");
+            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("load", loadTxt);
+        payload.put("test", testTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
         data.setParameter("metric2T", "ERR@10");
 
         String response = rankLib.execute(data.asJson());
@@ -185,11 +217,23 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample6");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String testTxt = "";
+
+        try
+        {
+            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("test", testTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
         data.setParameter("test", "MQ2008/Fold1/test.txt");
         data.setParameter("metric2T", "NDCG@10");
-        data.setParameter("idv", "output/baseline.ndcg.txt");
+        data.setParameter("idv", "baseline.ndcg");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -200,12 +244,25 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample7");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String loadTxt = "";
+        String testTxt = "";
 
-        data.setParameter("load", "models/f1.ca");
-        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        try
+        {
+            loadTxt = rankLib.readFile("models/f1.ca");
+            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("load", loadTxt);
+        payload.put("test", testTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
         data.setParameter("metric2T", "NDCG@10");
-        data.setParameter("idv", "output/f1.ca.ndcg.txt");
+        data.setParameter("idv", "f1.ca.ndcg");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -216,12 +273,25 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample8");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String loadTxt = "";
+        String testTxt = "";
 
-        data.setParameter("load", "models/f2.ca");
-        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        try
+        {
+            loadTxt = rankLib.readFile("models/f2.ca");
+            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("load", loadTxt);
+        payload.put("test", testTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
         data.setParameter("metric2T", "NDCG@10");
-        data.setParameter("idv", "output/f2.ca.ndcg.txt");
+        data.setParameter("idv", "f2.ca.ndcg");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -232,11 +302,28 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteAnalysis");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String baselineTxt = "";
+        String file1Txt = "";
+        String file2Txt = "";
 
-        data.setParameter("cp", "ciir.umass.edu.eval.Analyzer");
-        data.setParameter("all", "output/");
-        data.setParameter("base", "baseline.ndcg.txt");
+        try
+        {
+            baselineTxt = rankLib.readFile("output/baseline.ndcg.txt");
+            file1Txt = rankLib.readFile("output/f1.ca.ndcg.txt");
+            file2Txt = rankLib.readFile("output/f2.ca.ndcg.txt");
+
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("baseline", baselineTxt);
+        payload.put("file1", file1Txt);
+        payload.put("file2", file2Txt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
+        data.setParameter("program", "Analyzer");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
@@ -247,10 +334,23 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteExample9");
 
-        Data<String> data = new Data<>(Discriminators.Uri.GET);
+        String loadTxt = "";
+        String rankTxt = "";
 
-        data.setParameter("load", "mymodel.txt");
-        data.setParameter("rank", "MQ2008/Fold1/test.txt");
+        try
+        {
+            loadTxt = rankLib.readFile("mymodel.txt");
+            rankTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+        }
+        catch(IOException e) { }
+
+        Map<String,String> payload = new HashMap<>();
+        payload.put("load", loadTxt);
+        payload.put("rank", rankTxt);
+        String jsonPayload = Serializer.toJson(payload);
+
+        Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
+
         data.setParameter("score", "myscorefile.txt");
 
         String response = rankLib.execute(data.asJson());

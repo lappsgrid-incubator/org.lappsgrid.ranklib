@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -121,13 +122,18 @@ public class RankLib implements ProcessingService
         }
 
         else
-            {
+        {
             Path outputDirPath = null;
-            try { outputDirPath = Files.createTempDirectory("output"); }
-            catch (IOException e) { e.printStackTrace(); }
+            Path inputDirPath = null;
+            try
+            {
+                outputDirPath = Files.createTempDirectory("output");
+                inputDirPath = Files.createTempDirectory("input");
+            }
+            catch (IOException e) {  }
 
             // Get the parameters
-            String params = convertParameters(data, outputDirPath);
+            String params = convertParameters(data, outputDirPath, inputDirPath);
             String[] paramsArray;
 
             // Split the parameters into an array
@@ -244,154 +250,187 @@ public class RankLib implements ProcessingService
      * @param data A Data object
      * @return A String representing the parameters of the Data object.
      */
-    private String convertParameters(Data<String> data, Path outputDirPath)
+    private String convertParameters(Data<String> data, Path outputDirPath, Path inputDirPath)
     {
         StringBuilder params = new StringBuilder();
 
-        // These are the parameters from the Evaluator class that give input
-        ArrayList<String> EvaluatorInputParams = new ArrayList();
-        EvaluatorInputParams.add("train");
-        EvaluatorInputParams.add("feature");
-        EvaluatorInputParams.add("qrel");
-        EvaluatorInputParams.add("validate");
-        EvaluatorInputParams.add("test");
-        EvaluatorInputParams.add("load");
-        EvaluatorInputParams.add("rank");
+        String program = (String) data.getParameter("program");
 
         // Get the payload and convert it back into a HashMap to get all input content from it.
         String payloadJson = data.getPayload();
         Map<String,String> payload = Serializer.parse(payloadJson, HashMap.class);
 
-        // For each possible parameter, check if it is set
-        for(String param : EvaluatorInputParams)
+        if(program == null || program == "Evaluator")
         {
-            // If the parameter is set, write its content to a temporary file and add the
-            // parameter with its path to the output parameter. This will allow the RankLib
-            // program to read the content and process it as usual.
-            if(payload.get(param) != null)
+            // These are the parameters from the Evaluator class that give input
+            ArrayList<String> EvaluatorInputParams = new ArrayList();
+            EvaluatorInputParams.add("train");
+            EvaluatorInputParams.add("feature");
+            EvaluatorInputParams.add("qrel");
+            EvaluatorInputParams.add("validate");
+            EvaluatorInputParams.add("test");
+            EvaluatorInputParams.add("load");
+            EvaluatorInputParams.add("rank");
+
+            // For each possible parameter, check if it is set
+            for(String param : EvaluatorInputParams)
             {
-                String inputContent = payload.get(param);
-                try
+                // If the parameter is set, write its content to a temporary file and add the
+                // parameter with its path to the output parameter. This will allow the RankLib
+                // program to read the content and process it as usual.
+                if(payload.get(param) != null)
                 {
-                    String filePath = writeTempFile("train", inputContent);
-                    params.append(" -").append(param).append(" ").append(filePath);
-                } catch (IOException e) { }
+                    String inputContent = payload.get(param);
+                    try
+                    {
+                        String filePath = writeTempFile(param, inputContent, inputDirPath);
+                        params.append(" -").append(param).append(" ").append(filePath);
+                    } catch (IOException e) { }
+                }
             }
-        }
 
 
-        // These are the parameters from the Evaluator class that are followed
-        // by a String argument.
-        ArrayList<String> EvaluatorStringParams = new ArrayList();
-        EvaluatorStringParams.add("ranker");
-        EvaluatorStringParams.add("metric2t");
-        EvaluatorStringParams.add("gmax");
-        EvaluatorStringParams.add("tvs");
-        EvaluatorStringParams.add("tts");
-        EvaluatorStringParams.add("metric2T");
-        EvaluatorStringParams.add("norm");
-        EvaluatorStringParams.add("kcv");
-        EvaluatorStringParams.add("epoch");
-        EvaluatorStringParams.add("layer");
-        EvaluatorStringParams.add("node");
-        EvaluatorStringParams.add("lr");
-        EvaluatorStringParams.add("round");
-        EvaluatorStringParams.add("tc");
-        EvaluatorStringParams.add("noeq");
-        EvaluatorStringParams.add("tolerance");
-        EvaluatorStringParams.add("max");
-        EvaluatorStringParams.add("r");
-        EvaluatorStringParams.add("i");
-        // TODO: Find out what <slack> is
-        EvaluatorStringParams.add("reg");
-        EvaluatorStringParams.add("tree");
-        EvaluatorStringParams.add("leaf");
-        EvaluatorStringParams.add("shrinkage");
-        EvaluatorStringParams.add("tc");
-        EvaluatorStringParams.add("mls");
-        EvaluatorStringParams.add("estop");
-        EvaluatorStringParams.add("bag");
-        EvaluatorStringParams.add("srate");
-        EvaluatorStringParams.add("frate");
-        EvaluatorStringParams.add("L2");
-        EvaluatorStringParams.add("rtype");
+            // These are the parameters from the Evaluator class that are followed
+            // by a String argument.
+            ArrayList<String> EvaluatorStringParams = new ArrayList();
+            EvaluatorStringParams.add("ranker");
+            EvaluatorStringParams.add("metric2t");
+            EvaluatorStringParams.add("gmax");
+            EvaluatorStringParams.add("tvs");
+            EvaluatorStringParams.add("tts");
+            EvaluatorStringParams.add("metric2T");
+            EvaluatorStringParams.add("norm");
+            EvaluatorStringParams.add("kcv");
+            EvaluatorStringParams.add("epoch");
+            EvaluatorStringParams.add("layer");
+            EvaluatorStringParams.add("node");
+            EvaluatorStringParams.add("lr");
+            EvaluatorStringParams.add("round");
+            EvaluatorStringParams.add("tc");
+            EvaluatorStringParams.add("noeq");
+            EvaluatorStringParams.add("tolerance");
+            EvaluatorStringParams.add("max");
+            EvaluatorStringParams.add("r");
+            EvaluatorStringParams.add("i");
+            // TODO: Find out what <slack> is
+            EvaluatorStringParams.add("reg");
+            EvaluatorStringParams.add("tree");
+            EvaluatorStringParams.add("leaf");
+            EvaluatorStringParams.add("shrinkage");
+            EvaluatorStringParams.add("tc");
+            EvaluatorStringParams.add("mls");
+            EvaluatorStringParams.add("estop");
+            EvaluatorStringParams.add("bag");
+            EvaluatorStringParams.add("srate");
+            EvaluatorStringParams.add("frate");
+            EvaluatorStringParams.add("L2");
+            EvaluatorStringParams.add("rtype");
 
-        // For each possible parameter, check if it is set
-        for(String param : EvaluatorStringParams)
-        {
-            // If the parameter is set, add the parameter name and its argument to the output
-            // String to be given to the RankLib program
-            if(data.getParameter(param) != null)
+            // For each possible parameter, check if it is set
+            for(String param : EvaluatorStringParams)
             {
-                params.append(" -").append(param).append(" ").append(data.getParameter(param));
+                // If the parameter is set, add the parameter name and its argument to the output
+                // String to be given to the RankLib program
+                if(data.getParameter(param) != null)
+                {
+                    params.append(" -").append(param).append(" ").append(data.getParameter(param));
+                }
             }
-        }
 
-        // These are the parameters from the Evaluator class that are not
-        // followed by any argument, which makes them boolean parameters
-        ArrayList<String> EvaluatorBooleanParams = new ArrayList();
-        EvaluatorBooleanParams.add("silent");
-        EvaluatorBooleanParams.add("noeq");
+            // These are the parameters from the Evaluator class that are not
+            // followed by any argument, which makes them boolean parameters
+            ArrayList<String> EvaluatorBooleanParams = new ArrayList();
+            EvaluatorBooleanParams.add("silent");
+            EvaluatorBooleanParams.add("noeq");
 
-        // For each possible parameter, check if it is set
-        for(String param : EvaluatorBooleanParams)
-        {
-            // If the parameter is set, add the parameter name to the output String
-            // to be given to the RankLib program. These parameters don't have arguments.
-            if(data.getParameter(param) != null)
+            // For each possible parameter, check if it is set
+            for(String param : EvaluatorBooleanParams)
             {
-                params.append(" -").append(param).append(" ");
+                // If the parameter is set, add the parameter name to the output String
+                // to be given to the RankLib program. These parameters don't have arguments.
+                if(data.getParameter(param) != null)
+                {
+                    params.append(" -").append(param).append(" ");
+                }
             }
-        }
 
-        // These are the parameters from the Evaluator class that are followed
-        // by an output path
-        ArrayList<String> EvaluatorOutputParams = new ArrayList();
-        EvaluatorOutputParams.add("save");
-        EvaluatorOutputParams.add("score");
-        EvaluatorOutputParams.add("idv");
+            // These are the parameters from the Evaluator class that are followed
+            // by an output path
+            ArrayList<String> EvaluatorOutputParams = new ArrayList();
+            EvaluatorOutputParams.add("save");
+            EvaluatorOutputParams.add("score");
+            EvaluatorOutputParams.add("idv");
 
-        // For each possible parameter, check if it is set
-        for(String param : EvaluatorOutputParams)
-        {
-            // If the parameter is set, add the parameter with the path to the temporary
-            // output directory followed by the filename to the parameters. This will allow
-            // the RankLib program to write the content to these files which will get later
-            // in the execute method to be added to the final output payload.
-            if (data.getParameter(param) != null)
+            // For each possible parameter, check if it is set
+            for(String param : EvaluatorOutputParams)
             {
-                StringBuilder saveFilePath = new StringBuilder();
-                saveFilePath.append(outputDirPath).append("\\").append(data.getParameter(param)).append(".txt");
-                params.append(" -").append(param).append(" ").append(saveFilePath);
-            }
-        }
-
-        // This parameter needs special processing
-        if (data.getParameter("saveCrossValidationModels") != null)
-        {
-            params.append(" -kcvmd ").append(outputDirPath).append("/");
-            params.append(" -kcvmn ").append(data.getParameter("saveCrossValidationModels"));
-        }
-
-            // Parameters for the Analyzer class start here
-            if(data.getParameter("all") != null) {
-                params.append(" -all ").append(data.getParameter("all"));
+                // If the parameter is set, add the parameter with the path to the temporary
+                // output directory followed by the filename to the parameters. This will allow
+                // the RankLib program to write the content to these files which will get later
+                // in the execute method to be added to the final output payload.
+                if (data.getParameter(param) != null)
+                {
+                    StringBuilder saveFilePath = new StringBuilder();
+                    saveFilePath.append(outputDirPath).append("\\").append(data.getParameter(param)).append(".txt");
+                    params.append(" -").append(param).append(" ").append(saveFilePath);
+                }
             }
 
-            if(data.getParameter("base") != null)
+            // This parameter needs special processing because the original method takes two
+            // separate parameters for the directory and the name of the files to be saved
+            if (data.getParameter("saveCrossValidationModels") != null)
             {
-                params.append(" -base ").append(data.getParameter("base"));
+                params.append(" -kcvmd ").append(outputDirPath).append("/");
+                params.append(" -kcvmn ").append(data.getParameter("saveCrossValidationModels"));
             }
+        }
+
+
+        else if(program == "Analyzer")
+        {
+            for (String key : payload.keySet()) {
+                if (key == "baseline")
+                {
+                    String baselineContent = payload.get(key);
+                    try
+                    {
+                        String filePath = writeTempFile(key, baselineContent, inputDirPath);
+                        params.append(" -base ").append(filePath);
+                    }
+                    catch (IOException e) { }
+                }
+                else
+                {
+                    String fileContent = payload.get(key);
+                    try
+                    {
+                        writeTempFile("performanceFile", fileContent, inputDirPath);
+                    }
+                    catch (IOException e) { }
+                }
+            }
+            params.append(" -all ").append(inputDirPath).append("/");
 
             if(data.getParameter("np") != null)
             {
                 params.append(" -np ").append(data.getParameter("np"));
             }
+        }
 
-            // Parameters for the FeatureManager class start here
-            if(data.getParameter("input") != null) {
-                params.append(" -input ").append(data.getParameter("input"));
+        else if(program == "FeatureManager")
+        {
+            if(payload.get("input") != null)
+            {
+                String inputContent = payload.get("input");
+                try
+                {
+                    String filePath = writeTempFile("input", inputContent, inputDirPath);
+                    params.append(" -input ").append(filePath);
+                }
+                catch (IOException e) { }
             }
+
+            params.append(" -output ").append(outputDirPath).append("/");
 
             if(data.getParameter("k") != null)
             {
@@ -403,18 +442,14 @@ public class RankLib implements ProcessingService
                 params.append(" -tvs ").append(data.getParameter("tvs"));
             }
 
-            if(data.getParameter("output") != null)
-            {
-                params.append(" -output ").append(data.getParameter("tvs"));
-            }
-
             if(data.getParameter("shuffle") != null)
             {
                 params.append(" -shuffle ");
             }
-
-            return params.toString().substring(1);
         }
+
+        return params.toString().substring(1);
+    }
 
     public String readFile(String path) throws IOException {
         StringBuilder output = new StringBuilder();
@@ -428,12 +463,12 @@ public class RankLib implements ProcessingService
         return output.toString();
     }
 
-    public String writeTempFile(String fileName, String fileTxt) throws IOException {
-        File file = File.createTempFile(fileName, ".txt");
-        PrintWriter writer = new PrintWriter(file, "UTF-8");
+    public String writeTempFile(String fileName, String fileTxt, Path dirPath) throws IOException {
+        Path file = Files.createTempFile(dirPath, fileName, ".txt");
+        PrintWriter writer = new PrintWriter(file.toFile(), "UTF-8");
         writer.print(fileTxt);
         writer.close();
-        return file.getAbsolutePath();
+        return file.toString();
     }
 
 }
