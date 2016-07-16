@@ -18,7 +18,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -128,7 +127,9 @@ public class RankLib implements ProcessingService
             try
             {
                 outputDirPath = Files.createTempDirectory("output");
+                outputDirPath.toFile().deleteOnExit();
                 inputDirPath = Files.createTempDirectory("input");
+                inputDirPath.toFile().deleteOnExit();
             }
             catch (IOException e) {  }
 
@@ -154,27 +155,27 @@ public class RankLib implements ProcessingService
             System.setOut(ps);
 
             // Get Classpath parameter.
-            String cp = null;
-            if (data.getParameter("cp") != null)
+            String program = null;
+            if (data.getParameter("program") != null)
             {
-                cp = (String) data.getParameter("cp");
+                program = (String) data.getParameter("program");
             }
 
             // If no classpath is given, call Evaluator's main function, which is the main
             // classpath of the jar file
-            if ((cp == null) || cp.contains("Evaluator"))
+            if ((program == null) || program.contains("Evaluator"))
             {
                 Evaluator.main(paramsArray);
             }
 
             // If the classpath is the FeatureManager, run its main function
-            else if (cp.contains("FeatureManager"))
+            else if (program.contains("FeatureManager"))
             {
                 FeatureManager.main(paramsArray);
             }
 
             // If the classpath is the FeatureManager, run its main function
-            else if (cp.contains("Analyzer"))
+            else if (program.contains("Analyzer"))
             {
                 Analyzer.main(paramsArray);
             }
@@ -185,7 +186,7 @@ public class RankLib implements ProcessingService
                 System.out.flush();
                 System.setOut(old);
 
-                String errorData = generateError("Classpath given not recognized:" + cp);
+                String errorData = generateError("Classpath given not recognized:" + program);
                 logger.error(errorData);
                 return errorData;
             }
@@ -198,23 +199,22 @@ public class RankLib implements ProcessingService
 
             Map<String,String> outputPayload = new HashMap<>();
 
-
-
             try
             {
                 File outputFolder = new File(outputDirPath.toString());
                 File[] listOfFiles = outputFolder.listFiles();
-                for (File listOfFile : listOfFiles)
+                for (File file : listOfFiles)
                 {
-                    if (listOfFile.isFile())
+                    if (file.isFile())
                     {
-                        String fileName = listOfFile.getName().replace(".txt", "");
-                        String fileContent = readFile(listOfFile.getAbsolutePath());
+                        String fileName = file.getName().replace(".txt", "");
+                        String fileContent = readFile(file.getAbsolutePath());
                         if (fileName.equals(data.getParameter("save")))
                         {
                             fileContent = fileContent.replaceAll("##(.*)", "<!-- $1 -->");
                         }
                         outputPayload.put(fileName, fileContent);
+                        file.deleteOnExit();
                     }
                 }
             }
@@ -260,7 +260,7 @@ public class RankLib implements ProcessingService
         String payloadJson = data.getPayload();
         Map<String,String> payload = Serializer.parse(payloadJson, HashMap.class);
 
-        if(program == null || program == "Evaluator")
+        if(program == null || program.contains("Evaluator"))
         {
             // These are the parameters from the Evaluator class that give input
             ArrayList<String> EvaluatorInputParams = new ArrayList();
@@ -283,7 +283,7 @@ public class RankLib implements ProcessingService
                     String inputContent = payload.get(param);
                     try
                     {
-                        String filePath = writeTempFile(param, inputContent, inputDirPath);
+                        Path filePath = writeTempFile(param, inputContent, inputDirPath);
                         params.append(" -").append(param).append(" ").append(filePath);
                     } catch (IOException e) { }
                 }
@@ -386,16 +386,16 @@ public class RankLib implements ProcessingService
         }
 
 
-        else if(program == "Analyzer")
+        else if(program.contains("Analyzer"))
         {
             for (String key : payload.keySet()) {
-                if (key == "baseline")
+                if (key.equals("baseline"))
                 {
                     String baselineContent = payload.get(key);
                     try
                     {
-                        String filePath = writeTempFile(key, baselineContent, inputDirPath);
-                        params.append(" -base ").append(filePath);
+                        Path filePath = writeTempFile(key, baselineContent, inputDirPath);
+                        params.append(" -base ").append(filePath.getFileName());
                     }
                     catch (IOException e) { }
                 }
@@ -417,14 +417,14 @@ public class RankLib implements ProcessingService
             }
         }
 
-        else if(program == "FeatureManager")
+        else if(program.contains("FeatureManager"))
         {
             if(payload.get("input") != null)
             {
                 String inputContent = payload.get("input");
                 try
                 {
-                    String filePath = writeTempFile("input", inputContent, inputDirPath);
+                    Path filePath = writeTempFile("input", inputContent, inputDirPath);
                     params.append(" -input ").append(filePath);
                 }
                 catch (IOException e) { }
@@ -459,16 +459,53 @@ public class RankLib implements ProcessingService
             output.append(line).append("\n");
             line = br.readLine();
         }
-
+        br.close();
         return output.toString();
     }
 
-    public String writeTempFile(String fileName, String fileTxt, Path dirPath) throws IOException {
-        Path file = Files.createTempFile(dirPath, fileName, ".txt");
-        PrintWriter writer = new PrintWriter(file.toFile(), "UTF-8");
+    public Path writeTempFile(String fileName, String fileTxt, Path dirPath) throws IOException {
+        Path filePath = Files.createTempFile(dirPath, fileName, ".txt");
+        File file = filePath.toFile();
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
         writer.print(fileTxt);
         writer.close();
-        return file.toString();
+        file.deleteOnExit();
+        return filePath;
     }
+
+
+    /*
+    public void deleteDirectory(File directory)
+    {
+        if(directory.isDirectory())
+        {
+            String files[] = directory.list();
+            if(files.length == 0) { directory.delete(); }
+            else
+            {
+                for(String fileName : files)
+                {
+                    File currentFile = new File(directory, fileName);
+                    if(currentFile.isDirectory())
+                    {
+                        deleteDirectory(currentFile);
+                    }
+                    else
+                    {
+                        System.out.println(currentFile);
+                        try {
+                            Files.delete(currentFile.toPath());
+                        } catch (IOException e) {
+                        }
+                    }
+                }
+                try {
+                    Files.delete(directory.toPath());
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+    */
 
 }
