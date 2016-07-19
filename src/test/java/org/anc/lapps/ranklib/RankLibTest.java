@@ -70,9 +70,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample1()
+    public void testExecuteEvaluator1()
     {
-        System.out.println("RankLib.testExecuteExample1");
+        System.out.println("RankLib.testExecuteEvaluator1");
 
         String trainTxt = "";
         String testTxt = "";
@@ -104,9 +104,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample2()
+    public void testExecuteEvaluator2()
     {
-        System.out.println("RankLib.testExecuteExample2");
+        System.out.println("RankLib.testExecuteEvaluator2");
 
         String trainTxt = "";
 
@@ -133,9 +133,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample3()
+    public void testExecuteFeatureManager1()
     {
-        System.out.println("RankLib.testExecuteExample3");
+        System.out.println("RankLib.testExecuteFeatureManager1");
 
         String inputTxt = "";
 
@@ -159,9 +159,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample4()
+    public void testExecuteFeatureManager2()
     {
-        System.out.println("RankLib.testExecuteExample4");
+        System.out.println("RankLib.testExecuteFeatureManager2");
 
         String inputTxt = "";
 
@@ -185,9 +185,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample5()
+    public void testExecuteEvaluator3()
     {
-        System.out.println("RankLib.testExecuteExample5");
+        System.out.println("RankLib.testExecuteEvaluator3");
 
         String loadTxt = "";
         String testTxt = "";
@@ -213,9 +213,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample6()
+    public void testExecuteEvaluator4()
     {
-        System.out.println("RankLib.testExecuteExample6");
+        System.out.println("RankLib.testExecuteEvaluator4");
 
         String testTxt = "";
 
@@ -240,9 +240,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample7()
+    public void testExecuteEvaluator5()
     {
-        System.out.println("RankLib.testExecuteExample7");
+        System.out.println("RankLib.testExecuteEvaluator5");
 
         String loadTxt = "";
         String testTxt = "";
@@ -269,9 +269,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample8()
+    public void testExecuteEvaluator6()
     {
-        System.out.println("RankLib.testExecuteExample8");
+        System.out.println("RankLib.testExecuteEvaluator6");
 
         String loadTxt = "";
         String testTxt = "";
@@ -298,9 +298,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteAnalysis()
+    public void testExecuteAnalyzer()
     {
-        System.out.println("RankLib.testExecuteAnalysis");
+        System.out.println("RankLib.testExecuteAnalyzer");
 
         String baselineTxt = "";
         String file1Txt = "";
@@ -330,7 +330,7 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteExample9()
+    public void testExecuteEvaluator7()
     {
         System.out.println("RankLib.testExecuteExample9");
 
