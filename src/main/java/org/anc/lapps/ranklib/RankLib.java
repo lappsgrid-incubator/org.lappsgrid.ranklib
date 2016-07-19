@@ -98,21 +98,21 @@ public class RankLib implements ProcessingService
         Data<String> data = Serializer.parse(input, Data.class);
         String discriminator = data.getDiscriminator();
 
-        // If the Input discriminator is ERROR, return the Data as is.
+        // If the Input discriminator is ERROR, return the Data as is, since it's already a wrapped error.
         if (Discriminators.Uri.ERROR.equals(discriminator))
         {
             return input;
         }
 
         // If the Input discriminator is not GET, return a wrapped Error with an appropriate message.
-        if (!Discriminators.Uri.GET.equals(discriminator))
+        else if (!Discriminators.Uri.GET.equals(discriminator))
         {
             String errorData = generateError("Invalid discriminator.\nExpected " + Discriminators.Uri.GET + "\nFound " + discriminator);
             logger.error(errorData);
             return errorData;
         }
 
-        // Output an error if no parameters are given
+        // Output an error if no payload is given, since an input is required to run the program
         if (data.getPayload() == null)
         {
             String errorData = generateError("No input given.");
@@ -120,8 +120,13 @@ public class RankLib implements ProcessingService
             return errorData;
         }
 
+        // Else (if a payload is given), process the input
         else
         {
+            // Create temporary directories to hold input and output. This is needed because
+            // the RankLib methods need directories for most of their processing, so the input
+            // will be given within files in a directory, and the output will be read from files
+            // in the output directory.
             Path outputDirPath = null;
             Path inputDirPath = null;
             try
@@ -133,11 +138,13 @@ public class RankLib implements ProcessingService
             }
             catch (IOException e) {  }
 
-            // Get the parameters
+            // Call the method that converts the parameters to the format that they would
+            // be in when given from command-line.
             String params = convertParameters(data, outputDirPath, inputDirPath);
             String[] paramsArray;
 
-            // Split the parameters into an array
+            // Split the parameters into an array, which will be given as the args[] argument
+            // to the main methods of RankLib.
             try { paramsArray = params.split("\\s+"); }
             catch (PatternSyntaxException ex)
             {
@@ -146,73 +153,83 @@ public class RankLib implements ProcessingService
                 return errorData;
             }
 
-            // Create a stream to hold the output
+            // Create a stream to hold the output from System.out.println. This is necessary
+            // because when running, the program will print things from many RankLib classes and
+            // methods. So the printed output will be "caught" and saved to output.
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PrintStream ps = new PrintStream(baos);
-            // Save the old System.out
-            PrintStream old = System.out;
-            // Set the special stream
+            // Save the old System.out PrintStream, to reset at the end of the program.
+            PrintStream oldPrintStream = System.out;
+            // Set the special stream as the out stream
             System.setOut(ps);
 
-            // Get Classpath parameter.
-            String program = null;
-            if (data.getParameter("program") != null)
-            {
-                program = (String) data.getParameter("program");
-            }
+            // Get the program parameter, which determines which of the Analyzer, the Evaluator, or
+            // the FeaturesManager from RankLib one wants to use.
+            String program = (String) data.getParameter("program");
 
-            // If no classpath is given, call Evaluator's main function, which is the main
-            // classpath of the jar file
+            // If no program parameter is given, call Evaluator's main function, which is the main
+            // default main class of RankLib
             if ((program == null) || program.contains("Evaluator"))
             {
                 Evaluator.main(paramsArray);
             }
 
-            // If the classpath is the FeatureManager, run its main function
+            // If the program parameter is the FeatureManager, run its main function
             else if (program.contains("FeatureManager"))
             {
                 FeatureManager.main(paramsArray);
             }
 
-            // If the classpath is the FeatureManager, run its main function
+            // If the program parameter  is the FeatureManager, run its main function
             else if (program.contains("Analyzer"))
             {
                 Analyzer.main(paramsArray);
             }
-            // If an unknown classpath is given, output a wrapped error
+
+            // If an unknown program name is given, output a wrapped error
             else
             {
-                // Set System.out back
+                // Set System.out back to the original PrintStream
                 System.out.flush();
-                System.setOut(old);
+                System.setOut(oldPrintStream);
 
                 String errorData = generateError("Classpath given not recognized:" + program);
                 logger.error(errorData);
                 return errorData;
             }
 
-            // Set System.out back
+            // Set System.out back to the original PrintStream
             System.out.flush();
-            System.setOut(old);
+            System.setOut(oldPrintStream);
 
-            // Output results
-
+            // Make a Map to hold both the printed, and file outputs.
             Map<String,String> outputPayload = new HashMap<>();
 
             try
             {
+                // Process all the files in the output folder, to return them
+                // as part of the outputted Data object, and delete them from the
+                // temporary directory
                 File outputFolder = new File(outputDirPath.toString());
                 File[] listOfFiles = outputFolder.listFiles();
                 for (File file : listOfFiles)
                 {
                     if (file.isFile())
                     {
+                        // Get the filename, to serve as the key in the Map object, and
+                        // the content of the file to be put in the output
                         String fileName = file.getName().replace(".txt", "");
                         String fileContent = readFile(file.getAbsolutePath());
+
+                        // This is to change the wrongly commented xml file that is output
+                        // by the Evaluator class when running with the -save parameter. The
+                        // model is in XML format but starts with comments starting with ##
+                        // rather than in <!-- --> brackets.
                         if (fileName.equals(data.getParameter("save")))
                         {
                             fileContent = fileContent.replaceAll("##(.*)", "<!-- $1 -->");
                         }
+
                         outputPayload.put(fileName, fileContent);
                         file.deleteOnExit();
                     }
@@ -220,9 +237,13 @@ public class RankLib implements ProcessingService
             }
             catch(IOException e) { }
 
+            // Also add the printed text caught from the out stream to the payload
+            // with the "Printed" key
             outputPayload.put("Printed", baos.toString());
-            String outputJson = Serializer.toJson(outputPayload);
 
+            // Parse the Map to Json, then put it as a payload to a Data object with a LAPPS
+            // discriminator and return it as the final output
+            String outputJson = Serializer.toJson(outputPayload);
             Data<String> output = new Data<>(Discriminators.Uri.LAPPS, outputJson);
             return output.asPrettyJson();
         }
@@ -248,18 +269,23 @@ public class RankLib implements ProcessingService
      * to be given as input to the main classes.
      *
      * @param data A Data object
+     * @param outputDirPath A Path to the output directory
+     * @param inputDirPath A Path to the input directory
      * @return A String representing the parameters of the Data object.
      */
     private String convertParameters(Data<String> data, Path outputDirPath, Path inputDirPath)
     {
         StringBuilder params = new StringBuilder();
 
+        // Get the name of the program, to know which parameters to process.
         String program = (String) data.getParameter("program");
 
         // Get the payload and convert it back into a HashMap to get all input content from it.
         String payloadJson = data.getPayload();
         Map<String,String> payload = Serializer.parse(payloadJson, HashMap.class);
 
+        // If no program parameter is given, process as if the Evaluator was called, since it
+        // is the default running class of RankLib.
         if(program == null || program.contains("Evaluator"))
         {
             // These are the parameters from the Evaluator class that give input
@@ -283,12 +309,11 @@ public class RankLib implements ProcessingService
                     String inputContent = payload.get(param);
                     try
                     {
-                        Path filePath = writeTempFile(param, inputContent, inputDirPath);
+                        Path filePath = writeTempFile(param, inputDirPath, inputContent);
                         params.append(" -").append(param).append(" ").append(filePath);
                     } catch (IOException e) { }
                 }
             }
-
 
             // These are the parameters from the Evaluator class that are followed
             // by a String argument.
@@ -312,7 +337,6 @@ public class RankLib implements ProcessingService
             EvaluatorStringParams.add("max");
             EvaluatorStringParams.add("r");
             EvaluatorStringParams.add("i");
-            // TODO: Find out what <slack> is
             EvaluatorStringParams.add("reg");
             EvaluatorStringParams.add("tree");
             EvaluatorStringParams.add("leaf");
@@ -371,7 +395,7 @@ public class RankLib implements ProcessingService
                 if (data.getParameter(param) != null)
                 {
                     StringBuilder saveFilePath = new StringBuilder();
-                    saveFilePath.append(outputDirPath).append("\\").append(data.getParameter(param)).append(".txt");
+                    saveFilePath.append(outputDirPath).append("/").append(data.getParameter(param)).append(".txt");
                     params.append(" -").append(param).append(" ").append(saveFilePath);
                 }
             }
@@ -385,53 +409,76 @@ public class RankLib implements ProcessingService
             }
         }
 
-
+        // If the program parameter is Analyzer, process its possible parameters.
         else if(program.contains("Analyzer"))
         {
+            // Since the Analyzer only requires a baseline, and the rest of the files
+            // given can have any key, we process all of the input and check for the baseline.
             for (String key : payload.keySet()) {
+
+                // If the input file is the baseline, we take its content and save it to a
+                // temporary file in the input directory, then add the -base parameter
+                // with its path to the output parameter string.
                 if (key.equals("baseline"))
                 {
                     String baselineContent = payload.get(key);
                     try
                     {
-                        Path filePath = writeTempFile(key, baselineContent, inputDirPath);
+                        Path filePath = writeTempFile(key, inputDirPath, baselineContent);
                         params.append(" -base ").append(filePath.getFileName());
                     }
                     catch (IOException e) { }
                 }
+
+                // For all other keys, we save the file to a temporary file in the input
+                // directory. No parameter needs to be given for each file, since the entire
+                // directory will be later given as a parameter.
                 else
                 {
                     String fileContent = payload.get(key);
                     try
                     {
-                        writeTempFile("performanceFile", fileContent, inputDirPath);
+                        writeTempFile(key, inputDirPath, fileContent);
                     }
                     catch (IOException e) { }
                 }
             }
+
+            // Add the -all parameter with the input directory path containing the baseline
+            // as well as all the performance files.
             params.append(" -all ").append(inputDirPath).append("/");
 
+            // If this parameter is set, also add it to the parameter string.
             if(data.getParameter("np") != null)
             {
                 params.append(" -np ").append(data.getParameter("np"));
             }
         }
 
+        // If the program parameter is FeatureManager, process its possible parameters.
         else if(program.contains("FeatureManager"))
         {
+            // For the input file, get the content from the payload, then write it to a
+            // temporary file of which path will be added with the -input parameter, to
+            // the output parameters string.
             if(payload.get("input") != null)
             {
                 String inputContent = payload.get("input");
                 try
                 {
-                    Path filePath = writeTempFile("input", inputContent, inputDirPath);
+                    Path filePath = writeTempFile("input", inputDirPath, inputContent);
                     params.append(" -input ").append(filePath);
                 }
                 catch (IOException e) { }
             }
 
+            // Add the -output parameter with the path to the output directory to the
+            // parameters string, since the program will write files in the directory
+            // to then be processed and output in the final payload.
             params.append(" -output ").append(outputDirPath).append("/");
 
+            // If either of the k or tvs parameters are set, also add them to the
+            // parameter string.
             if(data.getParameter("k") != null)
             {
                 params.append(" -k ").append(data.getParameter("k"));
@@ -442,28 +489,49 @@ public class RankLib implements ProcessingService
                 params.append(" -tvs ").append(data.getParameter("tvs"));
             }
 
+            // If the shuffle parameter is set, add -shuffle to the parameters string.
+            // This parameter does not require any additional input, as it is a boolean
+            // parameter.
             if(data.getParameter("shuffle") != null)
             {
                 params.append(" -shuffle ");
             }
         }
 
+        // Return the resulting list of parameters to be processed as an array
+        // and given as input to the RankLib classes' main methods.
+        // The substring is used to remove the first space, since all parameters
+        // are being set as " -param ". This will avoid it to be wrongly split
+        // when getting the array of arguments.
         return params.toString().substring(1);
     }
 
+    /** This method will read a text file from a path, and output its contents as a String.
+     *
+     * @param path The path to the text file that should be read
+     * @return A String representing the contents of the text file.
+     */
     public String readFile(String path) throws IOException {
         StringBuilder output = new StringBuilder();
         BufferedReader br = new BufferedReader(new FileReader(path));
         String line = br.readLine();
         while (line != null) {
-            output.append(line).append("\n");
+            output.append(line).append("\r\n");
             line = br.readLine();
         }
         br.close();
         return output.toString();
     }
 
-    public Path writeTempFile(String fileName, String fileTxt, Path dirPath) throws IOException {
+    /** This method creates a temporary text file at a certain directory, and writes
+     * the given content into the file. The file will also be set to delete on exit.
+     *
+     * @param fileName The prefix for the temporary file to be created
+     * @param dirPath The path to the directory in which the file should be created
+     * @param fileTxt The text to be written in the file
+     * @return A path to the temporary text file that was created
+     */
+    public Path writeTempFile(String fileName, Path dirPath, String fileTxt) throws IOException {
         Path filePath = Files.createTempFile(dirPath, fileName, ".txt");
         File file = filePath.toFile();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
