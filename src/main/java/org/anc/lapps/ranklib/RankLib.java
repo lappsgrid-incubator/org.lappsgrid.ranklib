@@ -417,10 +417,10 @@ public class RankLib implements ProcessingService
 
             // This parameter needs special processing because the original method takes two
             // separate parameters for the directory and the name of the files to be saved
-            if (data.getParameter("saveCrossValidationModels") != null)
+            if (data.getParameter("saveCrossValidation") != null)
             {
                 params.append(" -kcvmd ").append(outputDirPath).append("/");
-                params.append(" -kcvmn ").append(data.getParameter("saveCrossValidationModels"));
+                params.append(" -kcvmn ").append(data.getParameter("saveCrossValidation"));
             }
         }
 

@@ -124,7 +124,7 @@ public class RankLibTest
 
         data.setParameter("ranker", "4");
         data.setParameter("kcv", "5");
-        data.setParameter("saveCrossValidationModels", "ca");
+        data.setParameter("saveCrossValidation", "ca");
         data.setParameter("metric2t", "NDCG@10");
         data.setParameter("metric2T", "ERR@10");
 
