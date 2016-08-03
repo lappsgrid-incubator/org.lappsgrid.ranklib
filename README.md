@@ -35,20 +35,20 @@ These are the possible input keys that can be given to the Evaluator function.
 | validate | (Optional) Specify if you want to tune your system on the validation data (default=unspecified) |
 | test | (Optional) Specify if you want to evaluate the trained model on this data (default=unspecified) |
 
-Additionally, the Evaluator function takes the parameters listed in the table below. All parameters take their arguments as strings |
+Additionally, the Evaluator function takes the parameters listed in the table below. All parameters take their arguments as strings.
 
 | Parameter Name | Description and arguments |
 | --- | --- |
-| ranker | Specify which ranking algorithm to use (by number)
-           0: MART (gradient boosted regression tree)
-           1: RankNet
-           2: RankBoost
-           3: AdaRank
-           4: Coordinate Ascent
-           6: LambdaMART
-           7: ListNet
-           8: Random Forests
-           9: Linear regression (L2 regularization) |
+| ranker | Specify which ranking algorithm to use (by number) |
+| | 0: MART (gradient boosted regression tree) |
+| | 1: RankNet |
+| | 2: RankBoost |
+| | 3: AdaRank |
+| | 4: Coordinate Ascent |
+| | 6: LambdaMART |
+| | 7: ListNet |
+| | 8: Random Forests |
+| | 9: Linear regression (L2 regularization) |
 | metric2t | (Optional) Metric to optimize on the training data. Supported: MAP, NDCG@k, DCG@k, P@k, RR@k, ERR@k (default=ERR@10) |
 | gmax | Highest judged relevance label. It affects the calculation of ERR (default=4, i.e. 5-point scale {0,1,2,3,4}) |
 
