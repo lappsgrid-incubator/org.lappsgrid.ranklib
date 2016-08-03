@@ -65,8 +65,8 @@ Additionally, the Evaluator function takes the parameters listed in the table be
 
 The following optional parameters are ranker-specific.
 
-| RankNet-specific parameters|
-| --- |
+| RankNet-specific parameters | |
+| --- | --- |
 | Parameter Name | Description and arguments |
 | --- | --- |
 | ranker | Specify which ranking algorithm to use (by number) |
