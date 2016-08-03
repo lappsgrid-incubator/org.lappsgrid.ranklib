@@ -32,6 +32,7 @@ public class RankLib implements ProcessingService
      */
     private String metadata;
     private static final Logger logger = LoggerFactory.getLogger(RankLib.class);
+    private ArrayList<File> allFiles = new ArrayList<>();
 
     public RankLib() { metadata = generateMetadata(); }
 
@@ -163,37 +164,38 @@ public class RankLib implements ProcessingService
             // Set the special stream as the out stream
             System.setOut(ps);
 
-            // Get the program parameter, which determines which of the Analyzer, the Evaluator, or
+            // Get the function parameter, which determines which of the Analyzer, the Evaluator, or
             // the FeaturesManager from RankLib one wants to use.
-            String program = (String) data.getParameter("program");
+            String function = (String) data.getParameter("function");
 
-            // If no program parameter is given, call Evaluator's main function, which is the main
-            // default main class of RankLib
-            if ((program == null) || program.contains("Evaluator"))
+            // If no function parameter is given, process as if the Evaluator was called, since it
+            // is the default running class of RankLib. If either "Evaluate" or "Train" are given
+            // process them together, since they are both called by the same Evaluator class.
+            if(function == null || function.contains("Evaluat") || function.contains("Train"))
             {
                 Evaluator.main(paramsArray);
             }
 
-            // If the program parameter is the FeatureManager, run its main function
-            else if (program.contains("FeatureManager"))
+            // If the function parameter is the Manager, run its main function
+            else if (function.contains("Manag"))
             {
                 FeatureManager.main(paramsArray);
             }
 
-            // If the program parameter  is the FeatureManager, run its main function
-            else if (program.contains("Analyzer"))
+            // If the function parameter is Analyze, run its main function
+            else if (function.contains("Analyz"))
             {
                 Analyzer.main(paramsArray);
             }
 
-            // If an unknown program name is given, output a wrapped error
+            // If an unknown function name is given, output a wrapped error
             else
             {
                 // Set System.out back to the original PrintStream
                 System.out.flush();
                 System.setOut(oldPrintStream);
 
-                String errorData = generateError("Classpath given not recognized:" + program);
+                String errorData = generateError("Classpath given not recognized:" + function);
                 logger.error(errorData);
                 return errorData;
             }
@@ -216,6 +218,9 @@ public class RankLib implements ProcessingService
                 {
                     if (file.isFile())
                     {
+                        // Add the file to the list of all files that will be used
+                        // to remove the long file names in the printed output.
+                        allFiles.add(file);
                         // Get the filename, to serve as the key in the Map object, and
                         // the content of the file to be put in the output
                         String fileName = file.getName().replace(".txt", "");
@@ -237,9 +242,18 @@ public class RankLib implements ProcessingService
             }
             catch(IOException e) { }
 
+            String printedOutput = baos.toString();
+
+            // Replace the long paths with the filename in the printed output. This is purely
+            // for aesthetic reasons.
+            for(File file : allFiles)
+            {
+                printedOutput = printedOutput.replace(file.getAbsolutePath(), file.getName());
+            }
+
             // Also add the printed text caught from the out stream to the payload
             // with the "Printed" key
-            outputPayload.put("Printed", baos.toString());
+            outputPayload.put("Printed", printedOutput);
 
             // Parse the Map to Json, then put it as a payload to a Data object with a LAPPS
             // discriminator and return it as the final output
@@ -277,16 +291,17 @@ public class RankLib implements ProcessingService
     {
         StringBuilder params = new StringBuilder();
 
-        // Get the name of the program, to know which parameters to process.
-        String program = (String) data.getParameter("program");
+        // Get the name of the function, to know which parameters to process.
+        String function = (String) data.getParameter("function");
 
         // Get the payload and convert it back into a HashMap to get all input content from it.
         String payloadJson = data.getPayload();
         Map<String,String> payload = Serializer.parse(payloadJson, HashMap.class);
 
-        // If no program parameter is given, process as if the Evaluator was called, since it
-        // is the default running class of RankLib.
-        if(program == null || program.contains("Evaluator"))
+        // If no function parameter is given, process as if the Evaluator was called, since it
+        // is the default running class of RankLib. If either "Evaluate" or "Train" are given
+        // process them together, since they are both called by the same Evaluator class.
+        if(function == null || function.contains("Evaluat") || function.contains("Train"))
         {
             // These are the parameters from the Evaluator class that give input
             ArrayList<String> EvaluatorInputParams = new ArrayList();
@@ -409,8 +424,8 @@ public class RankLib implements ProcessingService
             }
         }
 
-        // If the program parameter is Analyzer, process its possible parameters.
-        else if(program.contains("Analyzer"))
+        // If the function parameter is Analyze, process its possible parameters.
+        else if(function.contains("Analyz"))
         {
             // Since the Analyzer only requires a baseline, and the rest of the files
             // given can have any key, we process all of the input and check for the baseline.
@@ -455,8 +470,8 @@ public class RankLib implements ProcessingService
             }
         }
 
-        // If the program parameter is FeatureManager, process its possible parameters.
-        else if(program.contains("FeatureManager"))
+        // If the function parameter is Manage, process its possible parameters.
+        else if(function.contains("Manage"))
         {
             // For the input file, get the content from the payload, then write it to a
             // temporary file of which path will be added with the -input parameter, to
@@ -534,6 +549,9 @@ public class RankLib implements ProcessingService
     public Path writeTempFile(String fileName, Path dirPath, String fileTxt) throws IOException {
         Path filePath = Files.createTempFile(dirPath, fileName, ".txt");
         File file = filePath.toFile();
+        // Add the file to the list of all files that will be used
+        // to remove the long file names in the printed output.
+        allFiles.add(file);
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         writer.print(fileTxt);
         writer.close();

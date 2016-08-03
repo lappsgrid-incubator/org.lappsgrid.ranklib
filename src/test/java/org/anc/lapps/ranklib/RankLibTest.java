@@ -70,9 +70,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator1()
+    public void testExecuteTraining1()
     {
-        System.out.println("RankLib.testExecuteEvaluator1");
+        System.out.println("RankLib.testExecuteTraining1");
 
         String trainTxt = "";
         String testTxt = "";
@@ -104,9 +104,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator2()
+    public void testExecuteTraining2()
     {
-        System.out.println("RankLib.testExecuteEvaluator2");
+        System.out.println("RankLib.testExecuteTraining2");
 
         String trainTxt = "";
 
@@ -151,7 +151,7 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
-        data.setParameter("program", "FeatureManager");
+        data.setParameter("function", "Manage");
         data.setParameter("shuffle", true);
 
         String response = rankLib.execute(data.asJson());
@@ -177,7 +177,7 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
-        data.setParameter("program", "FeatureManager");
+        data.setParameter("function", "FeatureManager");
         data.setParameter("k", "5");
 
         String response = rankLib.execute(data.asJson());
@@ -185,9 +185,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator3()
+    public void testExecuteEvaluator1()
     {
-        System.out.println("RankLib.testExecuteEvaluator3");
+        System.out.println("RankLib.testExecuteEvaluator1");
 
         String loadTxt = "";
         String testTxt = "";
@@ -213,9 +213,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator4()
+    public void testExecuteEvaluator2()
     {
-        System.out.println("RankLib.testExecuteEvaluator4");
+        System.out.println("RankLib.testExecuteEvaluator2");
 
         String testTxt = "";
 
@@ -240,9 +240,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator5()
+    public void testExecuteEvaluator3()
     {
-        System.out.println("RankLib.testExecuteEvaluator5");
+        System.out.println("RankLib.testExecuteEvaluator3");
 
         String loadTxt = "";
         String testTxt = "";
@@ -269,9 +269,9 @@ public class RankLibTest
     }
 
     @Test
-    public void testExecuteEvaluator6()
+    public void testExecuteEvaluator4()
     {
-        System.out.println("RankLib.testExecuteEvaluator6");
+        System.out.println("RankLib.testExecuteEvaluator4");
 
         String loadTxt = "";
         String testTxt = "";
@@ -323,16 +323,16 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
-        data.setParameter("program", "Analyzer");
+        data.setParameter("function", "Analyzer");
 
         String response = rankLib.execute(data.asJson());
         System.out.println(response);
     }
 
     @Test
-    public void testExecuteEvaluator7()
+    public void testExecuteEvaluator5()
     {
-        System.out.println("RankLib.testExecuteExample9");
+        System.out.println("RankLib.testExecuteEvaluator5");
 
         String loadTxt = "";
         String rankTxt = "";
