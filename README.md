@@ -63,23 +63,68 @@ Additionally, the Evaluator function takes the parameters listed in the table be
 | kcv | (Optional) Specify if you want to perform k-fold cross validation using the specified training data (default=NoCV). tvs can be used to further reserve a portion of the training data in each fold for validation |
 | saveCrossValidation | (Optional) Name for model learned in each fold, which will be prefix-ed with the fold-number. Setting this parameter will save all the models learned in each fold (default=not-save) |
 
-The following optional parameters are ranker-specific.
+The following OPTIONAL parameters are ranker-specific.
 
-| RankNet-specific parameters | |
+| RankNet-specific Parameter Name | Description and arguments |
 | --- | --- |
-| Parameter Name | Description and arguments |
+| epoch  | The number of epochs to train (default=100) |
+| layer | The number of hidden layers (default=1) |
+| node | The number of hidden nodes per layer (default=10) |
+| lr | Learning rate (default=0.00005) |
+
+| RankBoost-specific Parameter Name | Description and arguments |
 | --- | --- |
-| ranker | Specify which ranking algorithm to use (by number) |
+| round | The number of rounds to train (default=300) |
+| tc | The number of threshold candidates to search. -1 to use all feature values (default=10) |
+
+| AdaRank-specific Parameter Name | Description and arguments |
+| --- | --- |
+| round | The number of rounds to train (default=500) |
+| noeq | Train without enqueuing too-strong features (default=unspecified). This is a boolean parameter: it will be set if it has any argument. If you wish to not have it set, simply leave it null |
+| tolerance | Tolerance between two consecutive rounds of learning (default=0.002) |
+| max | The maximum number of times can a feature be consecutively selected without changing performance (default=5) |
+
+| Coordinate Ascent-specific Parameter Name | Description and arguments |
+| --- | --- |
+| r | The number of random restarts (default=5) |
+| i | The number of iterations to search in each dimension (default=25) |
+| tolerance  | Performance tolerance between two solutions (default=0.001) |
+| reg | Regularization parameter (default=no-regularization) |
+
+
+| {MART, LambdaMART}-specific Parameter Name | Description and arguments |
+| --- | --- |
+| tree  | Number of trees (default=1000) |
+| leaf | Number of leaves for each tree (default=10) |
+| shrinkage | Shrinkage, or learning rate (default=0.1) |
+| tc | Number of threshold candidates for tree spliting. -1 to use all feature values (default=256) |
+| mls | Min leaf support -- minimum % of docs each leaf has to contain (default=1) |
+| estop | Stop early when no improvement is observed on validaton data in e consecutive rounds (default=100) |
+
+| ListNet-specific Parameter Name | Description and arguments |
+| --- | --- |
+| epoch | The number of epochs to train (default=1500) |
+| lr | Learning rate (default=0.00001) |
+
+| Random Forests-specific Parameter Name | Description and arguments |
+| --- | --- |
+| bag | The number of bags (default=300) |
+| srate | Sub-sampling rate (default=1.0) |
+| frate | Feature sampling rate (default=0.3) |
+| rtype | Ranker to bag (default=0, i.e. MART) |
+| tree | Number of trees in each bag (default=1) |
+| leaf | Number of leaves for each tree (default=100) |
+| shrinkage | Shrinkage, or learning rate (default=0.1) |
+| tc | Number of threshold candidates for tree spliting. -1 to use all feature values (default=256) |
+| mls | Min leaf support -- minimum % of docs each leaf has to contain (default=1) |
+
+| Linear Regression-specific Parameter Name | Description and arguments |
+| --- | --- |
+| L2 | L2 regularization parameter (default=1.0E-10) |
 
 
 
-
-
-
-
-Not specifying a classpath would be the equivalent of "java -jar". Speciying a classpath would be the equivalent of "java -cp".
-
-# How to use
-More info on using RankLib can be found on the "How to Use" page of the Lemur Project ("https://sourceforge.net/p/lemur/wiki/RankLib%20How%20to%20use/").
+# Examples
+Examples can be found on the "How to Use" page of the Lemur Project ("https://sourceforge.net/p/lemur/wiki/RankLib%20How%20to%20use/").
 
 
