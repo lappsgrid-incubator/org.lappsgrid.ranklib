@@ -126,8 +126,8 @@ public class RankLib implements ProcessingService
             // the RankLib methods need directories for most of their processing, so the input
             // will be given within files in a directory, and the output will be read from files
             // in the output directory.
-            Path outputDirPath = null;
-            Path inputDirPath = null;
+            Path outputDirPath;
+            Path inputDirPath;
 
             try
             {
@@ -329,7 +329,7 @@ public class RankLib implements ProcessingService
             EvaluatorInputParams.add("test");
             EvaluatorInputParams.add("rank");
 
-            SortedSet<String> sortedKeys = new TreeSet<String>(payload.keySet());
+            SortedSet<String> sortedKeys = new TreeSet<>(payload.keySet());
 
             // Loop through all of the input keys
             for (String key : sortedKeys)
@@ -483,7 +483,7 @@ public class RankLib implements ProcessingService
                 // If the input file is the baseline, we take its content and save it to a
                 // temporary file in the input directory, then add the -base parameter
                 // with its path to the output parameter string.
-                if (key.equals("baseline"))
+                if (key.contains("base"))
                 {
                     String baselineContent = payload.get(key);
                     try

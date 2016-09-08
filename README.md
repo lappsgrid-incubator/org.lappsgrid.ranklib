@@ -24,4 +24,4 @@ Each function has specific input requirements and parameters:
 * [Manage](md/analyze/main.md).
 
 # Examples
-Examples can be found on the ["How to Use" page](https://sourceforge.net/p/lemur/wiki/RankLib%20How%20to%20use/) of the Lemur Project.
+Examples can be found in the second section of the ["How to Use" page](https://sourceforge.net/p/lemur/wiki/RankLib%20How%20to%20use/) of the Lemur Project. Similar examples were used as tests.

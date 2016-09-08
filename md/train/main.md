@@ -1,5 +1,7 @@
 # Train Function
 
+This function can be used to train as well as tune and evaluate models.
+
 ## Input Keys
 
 These are the possible input keys that can be given to the function.
@@ -32,8 +34,8 @@ Additionally, the function takes the parameters listed in the table below. All p
 | metric2T | (Optional) Metric to evaluate on the test data (default = same as specified for metric2t) |
 | gmax | Highest judged relevance label. It affects the calculation of ERR (default=4, i.e. 5-point scale {0,1,2,3,4}) |
 | silent | (Optional) Do not print progress messages (which are printed by default). This is a boolean parameter: it will be set if it has any argument. If you wish to not have it set, simply leave it null |
-| tvs | (Optional) Takes a value x between 0 and 1. If you don't have separate validation data, use this to set train-validation split to be (x)(1.0-x) |
-| tts | (Optional) Takes a value x between 0 and 1. Set train-test split to be (x)(1.0-x). tts will override tvs |
+| tvs | (Optional) Train-validation split. Takes a value x between 0 and 1. If you don't have separate validation data, use this to set train-validation split to be (x)(1.0-x) |
+| tts | (Optional) Train-test split. Takes a value x between 0 and 1. Set train-test split to be (x)(1.0-x). tts will override tvs |
 | save | (Optional) Name of the model learned. Setting this parameter will save the model (default=not-save) |
 | norm | (Optional) Normalize all feature vectors (default=no-normalization). Method can be:
 | | sum: normalize each feature by the sum of all its values |
