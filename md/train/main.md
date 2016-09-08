@@ -1,7 +1,5 @@
 # Train Function
 
-This function takes input with the following keys.
-
 ## Input Keys
 
 These are the possible input keys that can be given to the function.
@@ -14,7 +12,7 @@ These are the possible input keys that can be given to the function.
 | validate | (Optional) Specify if you want to tune your system on the validation data (default=unspecified). If specified, the final model will be the one that performs best on the validation data |
 | test | (Optional) Specify if you want to evaluate the trained model on this data (default=unspecified) |
 
-## Parameters
+## General Parameters
 
 Additionally, the function takes the parameters listed in the table below. All parameters take their arguments as strings.
 
@@ -43,3 +41,10 @@ Additionally, the function takes the parameters listed in the table below. All p
 | | linear: normalize each feature by its min/max values |
 | kcv | (Optional) Specify if you want to perform k-fold cross validation using the specified training data (default=NoCV). tvs can be used to further reserve a portion of the training data in each fold for validation |
 | saveCrossValidation | (Optional) Name for model learned in each fold, which will be prefix-ed with the fold-number. Setting this parameter will save all the models learned in each fold (default=not-save) |
+
+## Optional Ranker-Specific Parameters
+In addition to the parameters above, each of the ten possible rankers specified in the ranker parameter have additional OPTIONAL parameters, listed in each link below:
+
+* [RankNet-specific parameters](ranknet.md)
+* [RankBoost-specific parameters](rankboost.md)
+
