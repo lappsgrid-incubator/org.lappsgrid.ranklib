@@ -15,9 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -130,6 +128,7 @@ public class RankLib implements ProcessingService
             // in the output directory.
             Path outputDirPath = null;
             Path inputDirPath = null;
+
             try
             {
                 outputDirPath = Files.createTempDirectory("output");
@@ -137,7 +136,15 @@ public class RankLib implements ProcessingService
                 inputDirPath = Files.createTempDirectory("input");
                 inputDirPath.toFile().deleteOnExit();
             }
-            catch (IOException e) {  }
+
+            // Since we are only handling files created by the function, there should never be
+            // a problem with these files, thus the exception will get promoted to a RuntimeException.
+            catch (IOException e)
+            {
+                String errorData = generateError("Error in handling of temporary files.");
+                logger.error(errorData);
+                throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+            }
 
             // Call the method that converts the parameters to the format that they would
             // be in when given from command-line.
@@ -171,6 +178,8 @@ public class RankLib implements ProcessingService
             // If no function parameter is given, process as if the Evaluator was called, since it
             // is the default running class of RankLib. If either "Evaluate" or "Train" are given
             // process them together, since they are both called by the same Evaluator class.
+            // Only the base of the name is given in order to accept various forms of the word
+            // eg: evaluate, evaluator, evaluation.
             if(function == null || function.contains("Evaluat") || function.contains("Train"))
             {
                 Evaluator.main(paramsArray);
@@ -240,7 +249,15 @@ public class RankLib implements ProcessingService
                     }
                 }
             }
-            catch(IOException e) { }
+
+            // Since we are only handling files created by the function, there should never be
+            // a problem with these files, thus the exception will get promoted to a RuntimeException.
+            catch (IOException e)
+            {
+                String errorData = generateError("Error in handling of temporary files.");
+                logger.error(errorData);
+                throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+            }
 
             String printedOutput = baos.toString();
 
@@ -310,23 +327,55 @@ public class RankLib implements ProcessingService
             EvaluatorInputParams.add("qrel");
             EvaluatorInputParams.add("validate");
             EvaluatorInputParams.add("test");
-            EvaluatorInputParams.add("load");
             EvaluatorInputParams.add("rank");
 
-            // For each possible parameter, check if it is set
-            for(String param : EvaluatorInputParams)
+            SortedSet<String> sortedKeys = new TreeSet<String>(payload.keySet());
+
+            // Loop through all of the input keys
+            for (String key : sortedKeys)
             {
-                // If the parameter is set, write its content to a temporary file and add the
-                // parameter with its path to the output parameter. This will allow the RankLib
-                // program to read the content and process it as usual.
-                if(payload.get(param) != null)
+                // If the key is in the list of unique input keys, excluding the "load"
+                // key
+                if (EvaluatorInputParams.contains(key))
                 {
-                    String inputContent = payload.get(param);
+                    // Write the content corresponding to the key to a temporary file and add the
+                    // parameter with its path to the output parameter. This will allow the RankLib
+                    // program to read the content and process it as usual.
+                    String inputContent = payload.get(key);
                     try
                     {
-                        Path filePath = writeTempFile(param, inputDirPath, inputContent);
-                        params.append(" -").append(param).append(" ").append(filePath);
-                    } catch (IOException e) { }
+                        Path filePath = writeTempFile(key, inputDirPath, inputContent);
+                        params.append(" -").append(key).append(" ").append(filePath);
+                    }
+
+                    // Since we are only handling files created by the function, there should never be
+                    // a problem with these files, thus the exception will get promoted to a RuntimeException.
+                    catch (IOException e)
+                    {
+                        String errorData = generateError("Error in handling of temporary files.");
+                        logger.error(errorData);
+                        throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+                    }
+                }
+
+                // Given that the keys are sorted, simply add the load files in order.
+                else if(key.contains("load"))
+                {
+                    String inputContent = payload.get(key);
+                    try
+                    {
+                        Path filePath = writeTempFile(key, inputDirPath, inputContent);
+                        params.append(" -load ").append(filePath);
+                    }
+
+                    // Since we are only handling files created by the function, there should never be
+                    // a problem with these files, thus the exception will get promoted to a RuntimeException.
+                    catch (IOException e)
+                    {
+                        String errorData = generateError("Error in handling of temporary files.");
+                        logger.error(errorData);
+                        throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+                    }
                 }
             }
 
@@ -429,8 +478,8 @@ public class RankLib implements ProcessingService
         {
             // Since the Analyzer only requires a baseline, and the rest of the files
             // given can have any key, we process all of the input and check for the baseline.
-            for (String key : payload.keySet()) {
-
+            for (String key : payload.keySet())
+            {
                 // If the input file is the baseline, we take its content and save it to a
                 // temporary file in the input directory, then add the -base parameter
                 // with its path to the output parameter string.
@@ -442,7 +491,15 @@ public class RankLib implements ProcessingService
                         Path filePath = writeTempFile(key, inputDirPath, baselineContent);
                         params.append(" -base ").append(filePath.getFileName());
                     }
-                    catch (IOException e) { }
+
+                    // Since we are only handling files created by the function, there should never be
+                    // a problem with these files, thus the exception will get promoted to a RuntimeException.
+                    catch (IOException e)
+                    {
+                        String errorData = generateError("Error in handling of temporary files.");
+                        logger.error(errorData);
+                        throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+                    }
                 }
 
                 // For all other keys, we save the file to a temporary file in the input
@@ -455,7 +512,15 @@ public class RankLib implements ProcessingService
                     {
                         writeTempFile(key, inputDirPath, fileContent);
                     }
-                    catch (IOException e) { }
+
+                    // Since we are only handling files created by the function, there should never be
+                    // a problem with these files, thus the exception will get promoted to a RuntimeException.
+                    catch (IOException e)
+                    {
+                        String errorData = generateError("Error in handling of temporary files.");
+                        logger.error(errorData);
+                        throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+                    }
                 }
             }
 
@@ -484,7 +549,15 @@ public class RankLib implements ProcessingService
                     Path filePath = writeTempFile("input", inputDirPath, inputContent);
                     params.append(" -input ").append(filePath);
                 }
-                catch (IOException e) { }
+
+                // Since we are only handling files created by the function, there should never be
+                // a problem with these files, thus the exception will get promoted to a RuntimeException.
+                catch (IOException e)
+                {
+                    String errorData = generateError("Error in handling of temporary files.");
+                    logger.error(errorData);
+                    throw new RuntimeException("A problem occurred in the handling of the temporary files.", e);
+                }
             }
 
             // Add the -output parameter with the path to the output directory to the
@@ -558,40 +631,5 @@ public class RankLib implements ProcessingService
         file.deleteOnExit();
         return filePath;
     }
-
-
-    /*
-    public void deleteDirectory(File directory)
-    {
-        if(directory.isDirectory())
-        {
-            String files[] = directory.list();
-            if(files.length == 0) { directory.delete(); }
-            else
-            {
-                for(String fileName : files)
-                {
-                    File currentFile = new File(directory, fileName);
-                    if(currentFile.isDirectory())
-                    {
-                        deleteDirectory(currentFile);
-                    }
-                    else
-                    {
-                        System.out.println(currentFile);
-                        try {
-                            Files.delete(currentFile.toPath());
-                        } catch (IOException e) {
-                        }
-                    }
-                }
-                try {
-                    Files.delete(directory.toPath());
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
-    */
 
 }

@@ -1,14 +1,13 @@
-## org.lappsgrid.ranklib
-RankLib from the Lemur Project
-("https://sourceforge.net/p/lemur/wiki/RankLib/").
+# org.lappsgrid.ranklib
+RankLib from the [Lemur Project](https://sourceforge.net/p/lemur/wiki/RankLib/).
 
-# Usage
+## Usage
 
-Takes a Data<String> object with a Uri.GET ("http://vocab.lappsgrid.org/ns/action/get") discriminator and a String payload representing the json format of HashMap<String,String> containing all needed input. Additional program-specific parameters can be added following the list below.
+Takes a Data<String> object with a [Uri.GET](http://vocab.lappsgrid.org/ns/action/get) discriminator and a String payload representing the json format of a HashMap<String,String> containing all needed input. Additional program-specific parameters can be added following the list below.
 
-##Function Parameter
+## Function Parameter
 
-The main parameter is the "function" parameter which specifies which of the three functions of RankLib one aims to use.
+The main parameter is the "function" parameter which specifies which of the four functions of RankLib one aims to use.
 
 | Function | Original RankLib Command Equivalent |
 | --- | --- |
@@ -17,7 +16,12 @@ The main parameter is the "function" parameter which specifies which of the thre
 | Analyze | equivalent to "java -cp bin/RankLib.jar ciir.umass.edu.eval.Analyzer <Params>" command |
 | Manage | equivalent to "java -cp bin/RankLib.jar ciir.umass.edu.features.FeatureManager <Params>" command |
 
-Each program has specific input requirements and parameters.
+Each function has specific input requirements and parameters:
+
+* [Train](md/train/main.md).
+* [Evaluate](md/evaluate/main.md).
+* [Analyze](md/analyze/main.md).
+* [Manage](md/analyze/main.md).
 
 # Training (+ tuning and evaluation) function
 

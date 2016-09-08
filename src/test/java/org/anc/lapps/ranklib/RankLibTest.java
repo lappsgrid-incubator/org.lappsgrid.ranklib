@@ -9,14 +9,8 @@ import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -74,17 +68,21 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteTraining1");
 
-        String trainTxt = "";
-        String testTxt = "";
-        String validateTxt = "";
+        String trainTxt;
+        String testTxt;
+        String validateTxt;
 
         try
         {
-            trainTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
-            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
-            validateTxt = rankLib.readFile("MQ2008/Fold1/vali.txt");
+            trainTxt = rankLib.readFile("examples/MQ2008/Fold1/train.txt");
+            testTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
+            validateTxt = rankLib.readFile("examples/MQ2008/Fold1/vali.txt");
         }
-        catch(IOException e) { }
+
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("train", trainTxt);
@@ -108,13 +106,16 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteTraining2");
 
-        String trainTxt = "";
+        String trainTxt;
 
         try
         {
-            trainTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+            trainTxt = rankLib.readFile("examples/MQ2008/Fold1/train.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("train", trainTxt);
@@ -137,13 +138,16 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteFeatureManager1");
 
-        String inputTxt = "";
+        String inputTxt;
 
         try
         {
-            inputTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+            inputTxt = rankLib.readFile("examples/MQ2008/Fold1/train.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("input", inputTxt);
@@ -163,13 +167,16 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteFeatureManager2");
 
-        String inputTxt = "";
+        String inputTxt;
 
         try
         {
-            inputTxt = rankLib.readFile("MQ2008/Fold1/train.txt");
+            inputTxt = rankLib.readFile("examples/MQ2008/Fold1/train.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("input", inputTxt);
@@ -189,15 +196,18 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteEvaluator1");
 
-        String loadTxt = "";
-        String testTxt = "";
+        String loadTxt;
+        String testTxt;
 
         try
         {
-            loadTxt = rankLib.readFile("mymodel.txt");
-            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            loadTxt = rankLib.readFile("examples/mymodel.txt");
+            testTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("load", loadTxt);
@@ -217,13 +227,16 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteEvaluator2");
 
-        String testTxt = "";
+        String testTxt;
 
         try
         {
-            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            testTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("test", testTxt);
@@ -231,7 +244,7 @@ public class RankLibTest
 
         Data<String> data = new Data<>(Discriminators.Uri.GET, jsonPayload);
 
-        data.setParameter("test", "MQ2008/Fold1/test.txt");
+        data.setParameter("test", "examples/MQ2008/Fold1/test.txt");
         data.setParameter("metric2T", "NDCG@10");
         data.setParameter("idv", "baseline.ndcg");
 
@@ -244,15 +257,18 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteEvaluator3");
 
-        String loadTxt = "";
-        String testTxt = "";
+        String loadTxt;
+        String testTxt;
 
         try
         {
-            loadTxt = rankLib.readFile("models/f1.ca");
-            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            loadTxt = rankLib.readFile("examples/models/f1.ca");
+            testTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("load", loadTxt);
@@ -273,15 +289,18 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteEvaluator4");
 
-        String loadTxt = "";
-        String testTxt = "";
+        String loadTxt;
+        String testTxt;
 
         try
         {
-            loadTxt = rankLib.readFile("models/f2.ca");
-            testTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            loadTxt = rankLib.readFile("examples/models/f2.ca");
+            testTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("load", loadTxt);
@@ -302,18 +321,21 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteAnalyzer");
 
-        String baselineTxt = "";
-        String file1Txt = "";
-        String file2Txt = "";
+        String baselineTxt;
+        String file1Txt;
+        String file2Txt;
 
         try
         {
-            baselineTxt = rankLib.readFile("output/baseline.ndcg.txt");
-            file1Txt = rankLib.readFile("output/f1.ca.ndcg.txt");
-            file2Txt = rankLib.readFile("output/f2.ca.ndcg.txt");
+            baselineTxt = rankLib.readFile("examples/output/baseline.ndcg.txt");
+            file1Txt = rankLib.readFile("examples/output/f1.ca.ndcg.txt");
+            file2Txt = rankLib.readFile("examples/output/f2.ca.ndcg.txt");
 
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("baseline", baselineTxt);
@@ -334,15 +356,18 @@ public class RankLibTest
     {
         System.out.println("RankLib.testExecuteEvaluator5");
 
-        String loadTxt = "";
-        String rankTxt = "";
+        String loadTxt;
+        String rankTxt;
 
         try
         {
-            loadTxt = rankLib.readFile("mymodel.txt");
-            rankTxt = rankLib.readFile("MQ2008/Fold1/test.txt");
+            loadTxt = rankLib.readFile("examples/mymodel.txt");
+            rankTxt = rankLib.readFile("examples/MQ2008/Fold1/test.txt");
         }
-        catch(IOException e) { }
+        catch (IOException e)
+        {
+            throw new RuntimeException("A problem occurred in the handling of the test input files.", e);
+        }
 
         Map<String,String> payload = new HashMap<>();
         payload.put("load", loadTxt);
