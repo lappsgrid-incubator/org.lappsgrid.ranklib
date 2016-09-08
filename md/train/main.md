@@ -45,6 +45,12 @@ Additionally, the function takes the parameters listed in the table below. All p
 ## Optional Ranker-Specific Parameters
 In addition to the parameters above, each of the ten possible rankers specified in the ranker parameter have additional OPTIONAL parameters, listed in each link below:
 
+* [{MART, LambdaMART}-specific parameters](mart.md)
 * [RankNet-specific parameters](ranknet.md)
 * [RankBoost-specific parameters](rankboost.md)
+* [AdaRank-specific parameters](adarank.md)
+* [Coordinate Ascent-specific parameters](coordasc.md)
+* [ListNet-specific parameters](listnet.md)
+* [Random Forests-specific parameters](ranfor.md)
+* [Linear Regression-Specific parameters](linreg.md)
 
