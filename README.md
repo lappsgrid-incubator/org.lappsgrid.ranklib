@@ -21,7 +21,7 @@ Each function has specific input requirements and parameters:
 * [Train](md/train/main.md).
 * [Evaluate](md/evaluate/main.md).
 * [Analyze](md/analyze/main.md).
-* [Manage](md/analyze/main.md).
+* [Manage](md/manage/main.md).
 
 # Examples
 Examples can be found in the second section of the ["How to Use" page](https://sourceforge.net/p/lemur/wiki/RankLib%20How%20to%20use/) of the Lemur Project. Similar examples were used as tests.
